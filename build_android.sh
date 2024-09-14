@@ -9,6 +9,7 @@ build_date=$(TZ=UTC date +%Y%m%d)
 sync_jobs=$(nproc)
 ccache_size=50G
 variant="userdebug"
+retries=5
 roomservice=0
 sign_lineageos=0
 yarn=0
@@ -37,6 +38,7 @@ usage() {
   echo "    -m gms Makefle (set filename if vendor/partner_gms exists, also sets WITH_GMS=true)"
   echo "    -n grapheneos kerNel root directory (above each device family repo)"
   echo "    -o Out dir for completed build images (defaults to \$ANDROID_BUILD_TOP/releases)"
+  echo "    -p number of retries for rePo sync if errors encountered (defaults to 5)"
   echo "    -r delete Roomservice.xml (if local_manifests are user-defined)"
   echo "    -s Sign lineageos build (requires keys, see https://wiki.lineageos.org/signing_builds)"
   echo "    -t grapheneos release Tag (or \"latest\" for latest stable, omit or \"dev\" for development)"
@@ -52,7 +54,7 @@ usage() {
   exit 1
 }
 
-while getopts ":a:b:c:d:e:f:j:k:m:n:o:t:u:v:x:hirsy" opt; do
+while getopts ":a:b:c:d:e:f:j:k:m:n:o:p:t:u:v:x:hirsy" opt; do
   case $opt in
     a) android_top="$OPTARG" ;;
     b) build_type="$OPTARG" ;;
@@ -67,6 +69,7 @@ while getopts ":a:b:c:d:e:f:j:k:m:n:o:t:u:v:x:hirsy" opt; do
     m) gms_makefile="$OPTARG" ;;
     n) kernel_dir="$OPTARG" ;;
     o) out_dir="$OPTARG" ;;
+    p) retries="$OPTARG" ;;
     r) roomservice=1 ;;
     s) sign_lineageos=1 ;;
     t) grapheneos_tag="$OPTARG" ;;
@@ -111,8 +114,18 @@ clean_repo() {
 
 sync_repo() {
   repo forall -c bash -c "git_reset_clean" &> /dev/null || true
-  repo sync --force-sync -j"${sync_jobs}"
-  repo forall -c "git lfs pull" # only needed for pre-lfs existing repos
+  n=0 r="${retries}"
+  set +e
+  until [[ "${n}" -gt "${r}" ]]
+  do
+    repo sync --force-sync -j"${sync_jobs}" && \
+    repo forall -c "git lfs pull" && break # only needed for pre-lfs existing repos
+    n=$((n+1))
+    sleep 3
+    [[ "${n}" -le "${r}" ]] && echo "WARN: repo sync failed, retry \"${n}\" of \"${r}\""
+    [[ "${n}" -gt "${r}" ]] && echo "FATAL: repo sync exceeded max retries" && exit 1
+  done
+  set -e
 }
 
 repo_safe_dir() {
@@ -143,6 +156,7 @@ apply_user_scripts() {
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
 [[ -n "${GRAPHENEOS_TAG}" ]] && export grapheneos_tag=${GRAPHENEOS_TAG}
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
+[[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}
 [[ -n "${DELETE_ROOMSERVICE}" && "${DELETE_ROOMSERVICE}" != "false" ]] && export roomservice=1
 [[ -n "${SIGN_LINEAGEOS}" && "${SIGN_LINEAGEOS}" != "false" ]] && export sign_lineageos=1
