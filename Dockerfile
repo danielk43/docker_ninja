@@ -59,11 +59,14 @@ RUN mkdir bin \
                    imagemagick \
                    lib32readline-dev \
                    lib32z1-dev \
+                   libdbus-1-dev \
+                   libdrm-dev \
                    libelf-dev \
                    libgcc-s1 \
                    libkrb5-dev \
                    liblz4-tool \
                    libncurses5 \
+                   libnss3-dev \
                    libsdl1.2-dev \
                    libssl-dev \
                    libxml2 \
