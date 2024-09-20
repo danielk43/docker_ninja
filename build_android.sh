@@ -130,8 +130,9 @@ sync_repo() {
 
 repo_safe_dir() {
   # Allow existing repo to work in container (will change some ownership to root)
-  git config --global --add safe.directory "${PWD}/.repo/manifests" || true
-  for path in $(repo list -fp); do git config --global --add safe.directory "${path}"; done || true
+  git config --global --add safe.directory "${PWD}/.repo/manifests"
+  git config --global --add safe.directory "${PWD}/.repo/repo"
+  for path in $(repo list -fp); do git config --global --add safe.directory "${path}"; done
 }
 
 apply_user_scripts() {
