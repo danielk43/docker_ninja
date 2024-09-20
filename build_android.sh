@@ -9,7 +9,7 @@ build_date=$(TZ=UTC date +%Y%m%d)
 sync_jobs=$(nproc)
 ccache_size=50G
 variant="userdebug"
-retries=5
+retries=7
 roomservice=0
 sign_lineageos=0
 yarn=0
@@ -38,7 +38,7 @@ usage() {
   echo "    -m gms Makefle (set filename if vendor/partner_gms exists, also sets WITH_GMS=true)"
   echo "    -n grapheneos kerNel root directory (above each device family repo)"
   echo "    -o Out dir for completed build images (defaults to \$ANDROID_BUILD_TOP/releases)"
-  echo "    -p number of retries for rePo sync if errors encountered (defaults to 5)"
+  echo "    -p number of retries for rePo sync if errors encountered (defaults to 7)"
   echo "    -r delete Roomservice.xml (if local_manifests are user-defined)"
   echo "    -s Sign lineageos build (requires keys, see https://wiki.lineageos.org/signing_builds)"
   echo "    -t grapheneos release Tag (or \"latest\" for latest stable, omit or \"dev\" for development)"
@@ -122,7 +122,7 @@ sync_repo() {
     repo forall -c "git lfs pull" && break # only needed for pre-lfs existing repos
     n=$((n+1))
     sleep 3
-    [[ "${n}" -le "${r}" ]] && echo "WARN: repo sync failed, retry \"${n}\" of \"${r}\""
+    [[ "${n}" -le "${r}" ]] && echo "WARN: repo sync failed, retry ${n} of ${r}"
     [[ "${n}" -gt "${r}" ]] && echo "FATAL: repo sync exceeded max retries" && exit 1
   done
   set -e
