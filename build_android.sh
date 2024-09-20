@@ -536,7 +536,7 @@ do
       mkdir "${device_family}" 2> /dev/null || true
       cd "${device_family}"
       [[ -f /.dockerenv ]] && repo_safe_dir
-      repo init -u https://github.com/GrapheneOS/kernel_manifest-caimoto.git -b "${android_version_number}"-caimoto
+      repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"-caimoto
       sync_repo
       ./build_"${device_family}".sh --config=use_source_tree_aosp --config=no_download_gki --lto=full
       cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/6.1/24D1
