@@ -34,7 +34,7 @@ RUN mkdir bin \
  && apt update \
  && apt -y upgrade \
  && apt -y install curl \
-                   git-core \
+                   git \
                    zip \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
@@ -53,9 +53,7 @@ RUN mkdir bin \
                    flex \
                    g++-multilib \
                    gcc-multilib \
-                   git \
                    git-lfs \
-                   gnupg \
                    gperf \
                    imagemagick \
                    lib32readline-dev \
