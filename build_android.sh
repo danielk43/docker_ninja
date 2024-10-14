@@ -113,6 +113,8 @@ clean_repo() {
 }
 
 sync_repo() {
+  cd .repo/repo && git pull --force
+  cd - > /dev/null
   repo forall -c bash -c "git_reset_clean" &> /dev/null || true
   n=0 r="${retries}"
   set +e
