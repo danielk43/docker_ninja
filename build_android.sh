@@ -614,7 +614,7 @@ do
     # Extract vendor files
     if [[ "${yarn}" == "1" ]]
     then
-      echo "Exracting vendor files"
+      echo "INFO: Extracting vendor files"
       yarnpkg install --cwd vendor/adevtool/
       lunch sdk_phone64_x86_64-cur-user
       m aapt2
