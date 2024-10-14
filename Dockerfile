@@ -34,7 +34,7 @@ RUN mkdir bin \
  && apt update \
  && apt -y upgrade \
  && apt -y install curl \
-                   git \
+                   git-core \
                    zip \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
