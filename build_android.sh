@@ -541,7 +541,7 @@ do
       repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"
       sync_repo
       ./build_"${device_family}".sh --config=use_source_tree_aosp --config=no_download_gki --lto=full
-      cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/6.1/24D1
+      cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
     # 8th gen
     elif grep -q "${device}" <<< "husky shiba akita"
     then
@@ -552,7 +552,7 @@ do
       repo init -u https://github.com/GrapheneOS/kernel_manifest-zuma.git -b "${android_version_number}"
       sync_repo
       ./build_"${device_family}".sh --config=use_source_tree_aosp --config=no_download_gki --lto=full
-      cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernel
+      cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
     # 7th and 6th gen (same manifest)
     elif grep -q "${device}" <<< "cheetah panther lynx tangorpro felix raven oriole bluejay"
     then
@@ -579,7 +579,7 @@ do
       else
         BUILD_AOSP_KERNEL=1 LTO=full ./build_"${device_family}".sh
       fi
-      cp -rf out/mixed/dist/* "${android_top}"/device/google/"${device_family}"-kernel
+      cp -rf out/mixed/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
     # 5th gen
     elif grep -q "${device}" <<< "redfin bramble"
     then
