@@ -472,19 +472,16 @@ do
     echo "INFO: Building GrapheneOS-${android_version_number} for ${device}"
 
     # Determine latest stable tag
-    grapheneos_latest_tag=$(curl -sL https://grapheneos.org/releases | xmllint --html --xpath "/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()" - 2> /dev/null)
-    if [[ "${grapheneos_tag,,}" == "latest" && "${grapheneos_latest_tag}" =~ ^[[:digit:]]{10}$ ]]
+    if [[ -z "${grapheneos_latest_tag}" ]]
     then
-      echo "INFO: GrapheneOS tag set to \"latest\", using latest stable tag: ${grapheneos_latest_tag}"
-      grapheneos_tag=${grapheneos_latest_tag}
-    elif [[ ! "${grapheneos_latest_tag}" =~ ^[[:digit:]]{10}$ ]]
-    then
-      echo "WARN: GrapheneOS latest stable tag not found. If explicit latest tag was set, lunch command will be incorrect"
-    elif [[ "${grapheneos_tag,,}" == "latest" && ! "${grapheneos_latest_tag}" =~ ^[[:digit:]]{10}$ ]]
-    then
-      echo "FATAL: GrapheneOS tag set to \"latest\", but latest stable tag was not found" && exit 1
-    else
-      echo "FATAL: GrapheneOS latest stable tag query error" && exit 1
+      grapheneos_latest_tag=$(curl -sL https://grapheneos.org/releases | xmllint --html --xpath "/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()" - 2> /dev/null)
+      if [[ "${grapheneos_tag,,}" == "latest" && "${grapheneos_latest_tag}" =~ ^[[:digit:]]{10}$ ]]
+      then
+        echo "INFO: GrapheneOS tag set to \"latest\", using latest stable tag: ${grapheneos_latest_tag}"
+        grapheneos_tag=${grapheneos_latest_tag}
+      else
+        echo "FATAL: GrapheneOS latest tag query error" && exit 1
+      fi
     fi
 
     # Sync GrapheneOS repo
