@@ -618,6 +618,7 @@ do
       yarnpkg install --cwd vendor/adevtool/
       lunch sdk_phone64_x86_64-cur-user
       m aapt2
+      rm -rf vendor/google_devices/*
       vendor/adevtool/bin/run generate-all -d "${device}"
     fi
     [[ ! -d vendor/google_devices/${device} ]] && echo "FATAL: vendor/google_devices/${device} missing" && exit 1
