@@ -498,7 +498,7 @@ do
       cd - > /dev/null
     elif grep -q "${device}" <<< "comet komodo caiman tokay"
     then
-      repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"-caimoto
+      repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"
     elif grep -q "${device}" <<< "redfin bramble"
     then
       repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"-redfin
@@ -522,7 +522,7 @@ do
     then
       for trichrome in TrichromeChrome TrichromeLibrary TrichromeWebView
       do
-        cp -f "${vanadium_dir}"/src/out/Default/apks/release/${trichrome}.apk external/vanadium/prebuilt/arm64
+        cp -f "${vanadium_dir}"/src/out/Default/apks/release/"${trichrome}".apk external/vanadium/prebuilt/arm64
       done
       cp -f "${vanadium_dir}"/src/out/Default/apks/release/VanadiumConfig.apk external/vanadium/prebuilt
     fi
@@ -538,7 +538,7 @@ do
       mkdir "${device_family}" 2> /dev/null || true
       cd "${device_family}"
       [[ -f /.dockerenv ]] && repo_safe_dir
-      repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"-caimoto
+      repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"
       sync_repo
       ./build_"${device_family}".sh --config=use_source_tree_aosp --config=no_download_gki --lto=full
       cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/6.1/24D1
