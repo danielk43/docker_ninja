@@ -580,31 +580,6 @@ do
         BUILD_AOSP_KERNEL=1 LTO=full ./build_"${device_family}".sh
       fi
       cp -rf out/mixed/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
-    # 5th gen
-    elif grep -q "${device}" <<< "redfin bramble"
-    then
-      mkdir redbull 2> /dev/null || true
-      cd redbull
-      [[ -f /.dockerenv ]] && repo_safe_dir
-      repo init -u https://github.com/GrapheneOS/kernel_manifest-redbull.git -b "${android_version_number}"
-      sync_repo
-      BUILD_CONFIG=private/msm-google/build.config.redbull.vintf build/build.sh
-      cp -rf out/android-msm-pixel-4.19/dist/* "${android_top}"/device/google/redbull-kernel
-      cp -rf out/android-msm-pixel-4.19/dist/* "${android_top}"/device/google/redbull-kernel/vintf
-    # 4th gen
-    elif grep -q "${device}" <<< "coral flame sunfish"
-    then
-      grep -q "${device}" <<< "coral flame" && device_family=coral || device_family=${device}
-      mkdir "${device_family}" 2> /dev/null || true
-      cd "${device_family}"
-      [[ -f /.dockerenv ]] && repo_safe_dir
-      repo init -u https://github.com/GrapheneOS/kernel_manifest-coral.git -b "${android_version_number}"
-      sync_repo
-      [[ ${device_family} == "coral" ]] && build_config=floral || build_config=${device_family}
-      KBUILD_BUILD_VERSION=1 KBUILD_BUILD_USER=build-user \
-      KBUILD_BUILD_HOST=build-host KBUILD_BUILD_TIMESTAMP=$(TZ=UTC date) \
-      BUILD_CONFIG=private/msm-google/build.config.${build_config} build/build.sh
-      cp -rf out/android-msm-pixel-4.14/dist/* "${android_top}"/device/google/"${device_family}"-kernel
     fi
     cd "${android_top}"
 
