@@ -513,6 +513,7 @@ do
     fi
     sync_repo
     source build/envsetup.sh > /dev/null
+
     [[ -n "${grapheneos_tag}" ]] && export BUILD_NUMBER=${grapheneos_tag}
     echo "BUILD_DATETIME=${BUILD_DATETIME} BUILD_NUMBER=${BUILD_NUMBER}"
 
@@ -651,8 +652,7 @@ do
     exit 1
   fi
 
-  # Clean Up
-  m clean
+  # Remove device-specific settings
   [[ -L "keys/${device}" ]] && rm -rf keys/"${device}"
   echo "INFO: Build for ${device} finished"
   unset device
