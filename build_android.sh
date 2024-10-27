@@ -588,6 +588,7 @@ do
     if [[ "${yarn}" == "1" ]]
     then
       echo "INFO: Extracting vendor files"
+      rm -rf vendor/adevtool/node_modules/
       yarnpkg install --cwd vendor/adevtool/
       lunch sdk_phone64_x86_64-cur-user
       m aapt2
