@@ -625,11 +625,11 @@ do
     fi
 
     # Build
-    if grep -q "${device}" <<< "husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
+    if grep -q "${device}" <<< "comet komodo caimen tokay husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
     then
       m vendorbootimage
     fi
-    if grep -q "${device}" <<< "husky shiba akita cheetah panther lynx tangorpro felix"
+    if grep -q "${device}" <<< "comet komodo caimen tokay husky shiba akita cheetah panther lynx tangorpro felix"
     then
       m vendorkernelbootimage
     fi
