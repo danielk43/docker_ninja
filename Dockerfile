@@ -55,6 +55,7 @@ RUN mkdir bin \
                    git-lfs \
                    gperf \
                    imagemagick \
+                   jq \
                    lib32readline-dev \
                    lib32z1-dev \
                    libdbus-1-dev \
