@@ -88,6 +88,7 @@ RUN mkdir bin \
  && git config --global user.email "ci-bot@docker.local" \
  && git config --global advice.detachedHead false \
  && git config --global http.postBuffer 524288000 \
+ && git config --global pack.windowMemory "4096m" \
  && apt -y autoremove \
  && apt autoclean \
  && rm -rf /var/cache/apt/* \
