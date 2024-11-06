@@ -11,9 +11,8 @@ ENV CCACHE_COMPRESSLEVEL=1
 ENV CCACHE_DIR=$HOME/ccache
 ENV CCACHE_EXEC=/usr/bin/ccache
 ENV CCACHE_SIZE=50G
+ENV GIT_CONFIG_GLOBAL=$HOME/.gitconfig
 ENV REBASELINE_PROGUARD=1
-ENV USER_EMAIL="android_build@docker.host"
-ENV USER_NAME="Android Build"
 
 ENV ANDROID_VERSION=""
 ENV BUILD_VARIANT=userdebug
@@ -85,6 +84,10 @@ RUN mkdir bin \
                    xxd \
                    zip \
                    zlib1g-dev \
+ && git config --global user.name "Docker CI Bot" \
+ && git config --global user.email "ci-bot@docker.local" \
+ && git config --global advice.detachedHead false \
+ && git config --global http.postBuffer 524288000 \
  && apt -y autoremove \
  && apt autoclean \
  && rm -rf /var/cache/apt/* \
