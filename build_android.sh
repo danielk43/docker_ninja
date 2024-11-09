@@ -182,7 +182,7 @@ then
 fi
 
 # Update depot tools
-cd depot_tools && git pull
+cd depot_tools && git pull || true
 
 cd "${android_top}"
 
