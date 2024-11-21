@@ -1,4 +1,4 @@
-# docker_android_os
+# docker_ninja
 ## build
 Build LineageOS or GrapheneOS noninteractively  
 
@@ -25,7 +25,7 @@ docker run --rm \
 -v "/path/to/scripts:/android_build/scripts" \
 -v "/path/to/src:/android_build/src" \
 -v "/path/to/vanadium:/android_build/vanadium" \
-danielk43/docker_android_os:latest
+danielk43/docker_ninja:latest
 ```
 
 LineageOS example
@@ -47,7 +47,7 @@ docker run --rm \
 -v "/path/to/android/lineageos/ROMs:/android_build/out" \
 -v "/path/to/scripts:/android_build/scripts" \
 -v "/path/to/src:/android_build/src" \
-danielk43/docker_android_os:latest
+danielk43/docker_ninja:latest
 ```
 
 ### Standalone / Host
