@@ -3,6 +3,10 @@
 # shellcheck disable=SC2015,SC2046,SC2206
 # shellcheck source=/dev/null
 
+# TODO: Fix keys in loop
+# TODO: Long / better opts
+# TODO: Optional avb
+
 set -eo pipefail
 
 build_date=$(TZ=UTC date +%Y%m%d)
@@ -31,6 +35,7 @@ usage() {
   echo "    -d space-separated Device codenames to build (\"device1 device2 ...\")"
   echo "    -e space-separated extra Env vars to be exported (\"k1=v1 k2=v2 ...\")"
   echo "    -f target build Flavor / variant (defaults to userdebug. also accepts user, eng)"
+  echo "    -g Generate keys distinguished name (defaults per os flavor, idempotent)"
   echo "    -h print this Help menu and exit"
   echo "    -i offIcial grapheneos build (must configure update server url)"
   echo "    -j number of Jobs during repo sync (defaults to nproc)"
@@ -54,18 +59,19 @@ usage() {
   exit 1
 }
 
-while getopts ":a:b:c:d:e:f:j:k:m:n:o:p:t:u:v:x:hirsy" opt; do
+while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hirsy" opt; do
   case $opt in
-    a) android_top="$OPTARG" ;;
+    a) export android_top="$OPTARG" ;;
     b) build_type="$OPTARG" ;;
     c) ccache_size="$OPTARG" ;;
     d) device_list="$OPTARG" ;;
     e) env_vars="$OPTARG" ;;
     f) variant="$OPTARG" ;;
+    g) export dname="$OPTARG" ;;
     h) usage ;;
     i) export OFFICIAL_BUILD=true ;;
     j) sync_jobs="$OPTARG" ;;
-    k) keys_dir="$OPTARG" ;;
+    k) export keys_dir="$OPTARG" ;;
     m) gms_makefile="$OPTARG" ;;
     n) kernel_dir="$OPTARG" ;;
     o) out_dir="$OPTARG" ;;
@@ -107,6 +113,13 @@ ccache_init() {
   ccache -o compression=true
 }
 
+repo_safe_dir() {
+  # Allow existing repo to work in container (will change some ownership to root)
+  git config --global --add safe.directory "${PWD}/.repo/manifests"
+  git config --global --add safe.directory "${PWD}/.repo/repo"
+  for path in $(repo list -fp); do git config --global --add safe.directory "${path}"; done
+}
+
 clean_repo() {
   rm -rf out releases ./*.zip
   find . -type f -name "index.lock" -delete
@@ -130,13 +143,6 @@ sync_repo() {
   set -e
 }
 
-repo_safe_dir() {
-  # Allow existing repo to work in container (will change some ownership to root)
-  git config --global --add safe.directory "${PWD}/.repo/manifests"
-  git config --global --add safe.directory "${PWD}/.repo/repo"
-  for path in $(repo list -fp); do git config --global --add safe.directory "${path}"; done
-}
-
 apply_user_scripts() {
   user_scripts_arr=( $user_scripts )
   for user_script in "${user_scripts_arr[@]}"
@@ -146,9 +152,8 @@ apply_user_scripts() {
 }
 
 # Export variables
+export BUILD_HOME="${PWD}"
 [[ -n "${env_vars}" ]] && export "${env_vars?}"
-[[ -n "${USER_NAME}" ]] && export GIT_AUTHOR_NAME=${USER_NAME} GIT_COMMITTER_NAME=${USER_NAME}
-[[ -n "${USER_EMAIL}" ]] && export GIT_AUTHOR_EMAIL=${USER_EMAIL} GIT_COMMITTER_EMAIL=${USER_EMAIL}
 
 # Add (Docker) environment if it exists
 [[ -n "${ANDROID_VERSION}" ]] && export android_version=${ANDROID_VERSION}
@@ -156,6 +161,7 @@ apply_user_scripts() {
 [[ -n "${BUILD_VARIANT}" ]] && export variant=${BUILD_VARIANT}
 [[ -n "${CCACHE_SIZE}" ]] && export ccache_size=${CCACHE_SIZE}
 [[ -n "${DEVICES}" ]] && export device_list=${DEVICES}
+[[ -n "${DNAME}" ]] && export dname=${DNAME}
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
 [[ -n "${GRAPHENEOS_TAG}" ]] && export grapheneos_tag=${GRAPHENEOS_TAG}
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
@@ -266,6 +272,9 @@ then
   fi
 fi
 
+# Initialize signing keys
+. "${BUILD_HOME}"/signing_keys.sh
+
 # Initialize Device Build
 devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
 echo "INFO: Device list: ${devices}"
@@ -273,11 +282,19 @@ for device in ${devices}
 do
   export device
 
+  # Setup key vars
+  keys_password="KEYS_PASSWORD_${device^^}"
+  device_keys="${keys_dir}/${device}"
+
   # Link keys (containerized link will not be found on host)
   if [[ "${keys_dir}" != "${android_top}/keys" ]]
   then
     mkdir keys 2> /dev/null || true
-    ln -s "${keys_dir}"/"${device}" "${android_top}"/keys 2> /dev/null || true
+    if [[ ! -d "${device_keys}" ]]
+    then
+      mkdir "${device_keys}" 2> /dev/null || true
+    fi
+    ln -s "${device_keys}" "${android_top}"/keys 2> /dev/null || true
   fi
 
   # Create outfile directory
@@ -287,14 +304,17 @@ do
 
   if grep -q "${android_platform}" <<< "lineageos"
   then
+    echo "INFO: Building LineageOS-${android_version_number} for ${device}"
+
+    # Generate signing keys
     [[ "${sign_lineageos}" == "1" && -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
+    [[ "${sign_lineageos}" == "1" ]] && make_lineageos_keys
 
     [[ -n "${build_type}" ]] && export LINEAGE_BUILDTYPE="${build_type}"
     [[ -n "${gms_makefile}" ]] && export WITH_GMS="true" GMS_MAKEFILE="${gms_makefile}"
 
     mkdir -p "${out_dir}"/"${device}"/"${build_date}" 2> /dev/null || true
 
-    echo "INFO: Building LineageOS-${android_version_number} for ${device}"
     # Sync LOS repo
     clean_repo
     [[ -f /.dockerenv ]] && repo_safe_dir
@@ -322,127 +342,10 @@ do
       echo "INFO: Breakfast combo: ${combo}"
       breakfast "${combo}"
       m target-files-package otatools
-    
-      device_keys="${keys_dir}/${device}"
-      sign_target_files_apks -o -d "${device_keys}" \
-      --extra_apks AdServicesApk.apk="${device_keys}"/releasekey \
-      --extra_apks HalfSheetUX.apk="${device_keys}"/releasekey \
-      --extra_apks OsuLogin.apk="${device_keys}"/releasekey \
-      --extra_apks SafetyCenterResources.apk="${device_keys}"/releasekey \
-      --extra_apks ServiceConnectivityResources.apk="${device_keys}"/releasekey \
-      --extra_apks ServiceUwbResources.apk="${device_keys}"/releasekey \
-      --extra_apks ServiceWifiResources.apk="${device_keys}"/releasekey \
-      --extra_apks WifiDialog.apk="${device_keys}"/releasekey \
-      --extra_apks com.android.adbd.apex="${device_keys}"/com.android.adbd \
-      --extra_apks com.android.adservices.apex="${device_keys}"/com.android.adservices \
-      --extra_apks com.android.adservices.api.apex="${device_keys}"/com.android.adservices.api \
-      --extra_apks com.android.appsearch.apex="${device_keys}"/com.android.appsearch \
-      --extra_apks com.android.art.apex="${device_keys}"/com.android.art \
-      --extra_apks com.android.bluetooth.apex="${device_keys}"/com.android.bluetooth \
-      --extra_apks com.android.btservices.apex="${device_keys}"/com.android.btservices \
-      --extra_apks com.android.cellbroadcast.apex="${device_keys}"/com.android.cellbroadcast \
-      --extra_apks com.android.compos.apex="${device_keys}"/com.android.compos \
-      --extra_apks com.android.configinfrastructure.apex="${device_keys}"/com.android.configinfrastructure \
-      --extra_apks com.android.connectivity.resources.apex="${device_keys}"/com.android.connectivity.resources \
-      --extra_apks com.android.conscrypt.apex="${device_keys}"/com.android.conscrypt \
-      --extra_apks com.android.devicelock.apex="${device_keys}"/com.android.devicelock \
-      --extra_apks com.android.extservices.apex="${device_keys}"/com.android.extservices \
-      --extra_apks com.android.graphics.pdf.apex="${device_keys}"/com.android.graphics.pdf \
-      --extra_apks com.android.hardware.biometrics.face.virtual.apex="${device_keys}"/com.android.hardware.biometrics.face.virtual \
-      --extra_apks com.android.hardware.biometrics.fingerprint.virtual.apex="${device_keys}"/com.android.hardware.biometrics.fingerprint.virtual \
-      --extra_apks com.android.hardware.boot.apex="${device_keys}"/com.android.hardware.boot \
-      --extra_apks com.android.hardware.cas.apex="${device_keys}"/com.android.hardware.cas \
-      --extra_apks com.android.hardware.wifi.apex="${device_keys}"/com.android.hardware.wifi \
-      --extra_apks com.android.healthfitness.apex="${device_keys}"/com.android.healthfitness \
-      --extra_apks com.android.hotspot2.osulogin.apex="${device_keys}"/com.android.hotspot2.osulogin \
-      --extra_apks com.android.i18n.apex="${device_keys}"/com.android.i18n \
-      --extra_apks com.android.ipsec.apex="${device_keys}"/com.android.ipsec \
-      --extra_apks com.android.media.apex="${device_keys}"/com.android.media \
-      --extra_apks com.android.media.swcodec.apex="${device_keys}"/com.android.media.swcodec \
-      --extra_apks com.android.mediaprovider.apex="${device_keys}"/com.android.mediaprovider \
-      --extra_apks com.android.nearby.halfsheet.apex="${device_keys}"/com.android.nearby.halfsheet \
-      --extra_apks com.android.networkstack.tethering.apex="${device_keys}"/com.android.networkstack.tethering \
-      --extra_apks com.android.neuralnetworks.apex="${device_keys}"/com.android.neuralnetworks \
-      --extra_apks com.android.ondevicepersonalization.apex="${device_keys}"/com.android.ondevicepersonalization \
-      --extra_apks com.android.os.statsd.apex="${device_keys}"/com.android.os.statsd \
-      --extra_apks com.android.permission.apex="${device_keys}"/com.android.permission \
-      --extra_apks com.android.resolv.apex="${device_keys}"/com.android.resolv \
-      --extra_apks com.android.rkpd.apex="${device_keys}"/com.android.rkpd \
-      --extra_apks com.android.runtime.apex="${device_keys}"/com.android.runtime \
-      --extra_apks com.android.safetycenter.resources.apex="${device_keys}"/com.android.safetycenter.resources \
-      --extra_apks com.android.scheduling.apex="${device_keys}"/com.android.scheduling \
-      --extra_apks com.android.sdkext.apex="${device_keys}"/com.android.sdkext \
-      --extra_apks com.android.support.apexer.apex="${device_keys}"/com.android.support.apexer \
-      --extra_apks com.android.telephony.apex="${device_keys}"/com.android.telephony \
-      --extra_apks com.android.telephonymodules.apex="${device_keys}"/com.android.telephonymodules \
-      --extra_apks com.android.tethering.apex="${device_keys}"/com.android.tethering \
-      --extra_apks com.android.tzdata.apex="${device_keys}"/com.android.tzdata \
-      --extra_apks com.android.uwb.apex="${device_keys}"/com.android.uwb \
-      --extra_apks com.android.uwb.resources.apex="${device_keys}"/com.android.uwb.resources \
-      --extra_apks com.android.virt.apex="${device_keys}"/com.android.virt \
-      --extra_apks com.android.vndk.current.apex="${device_keys}"/com.android.vndk.current \
-      --extra_apks com.android.vndk.current.on_vendor.apex="${device_keys}"/com.android.vndk.current.on_vendor \
-      --extra_apks com.android.wifi.apex="${device_keys}"/com.android.wifi \
-      --extra_apks com.android.wifi.dialog.apex="${device_keys}"/com.android.wifi.dialog \
-      --extra_apks com.android.wifi.resources.apex="${device_keys}"/com.android.wifi.resources \
-      --extra_apks com.google.pixel.camera.hal.apex="${device_keys}"/com.google.pixel.camera.hal \
-      --extra_apks com.google.pixel.vibrator.hal.apex="${device_keys}"/com.google.pixel.vibrator.hal \
-      --extra_apks com.qorvo.uwb.apex="${device_keys}"/com.qorvo.uwb \
-      --extra_apex_payload_key com.android.adbd.apex="${device_keys}"/com.android.adbd.pem \
-      --extra_apex_payload_key com.android.adservices.apex="${device_keys}"/com.android.adservices.pem \
-      --extra_apex_payload_key com.android.adservices.api.apex="${device_keys}"/com.android.adservices.api.pem \
-      --extra_apex_payload_key com.android.appsearch.apex="${device_keys}"/com.android.appsearch.pem \
-      --extra_apex_payload_key com.android.art.apex="${device_keys}"/com.android.art.pem \
-      --extra_apex_payload_key com.android.bluetooth.apex="${device_keys}"/com.android.bluetooth.pem \
-      --extra_apex_payload_key com.android.btservices.apex="${device_keys}"/com.android.btservices.pem \
-      --extra_apex_payload_key com.android.cellbroadcast.apex="${device_keys}"/com.android.cellbroadcast.pem \
-      --extra_apex_payload_key com.android.compos.apex="${device_keys}"/com.android.compos.pem \
-      --extra_apex_payload_key com.android.configinfrastructure.apex="${device_keys}"/com.android.configinfrastructure.pem \
-      --extra_apex_payload_key com.android.connectivity.resources.apex="${device_keys}"/com.android.connectivity.resources.pem \
-      --extra_apex_payload_key com.android.conscrypt.apex="${device_keys}"/com.android.conscrypt.pem \
-      --extra_apex_payload_key com.android.devicelock.apex="${device_keys}"/com.android.devicelock.pem \
-      --extra_apex_payload_key com.android.extservices.apex="${device_keys}"/com.android.extservices.pem \
-      --extra_apex_payload_key com.android.graphics.pdf.apex="${device_keys}"/com.android.graphics.pdf.pem \
-      --extra_apex_payload_key com.android.hardware.biometrics.face.virtual.apex="${device_keys}"/com.android.hardware.biometrics.face.virtual.pem \
-      --extra_apex_payload_key com.android.hardware.biometrics.fingerprint.virtual.apex="${device_keys}"/com.android.hardware.biometrics.fingerprint.virtual.pem \
-      --extra_apex_payload_key com.android.hardware.boot.apex="${device_keys}"/com.android.hardware.boot.pem \
-      --extra_apex_payload_key com.android.hardware.cas.apex="${device_keys}"/com.android.hardware.cas.pem \
-      --extra_apex_payload_key com.android.hardware.wifi.apex="${device_keys}"/com.android.hardware.wifi.pem \
-      --extra_apex_payload_key com.android.healthfitness.apex="${device_keys}"/com.android.healthfitness.pem \
-      --extra_apex_payload_key com.android.hotspot2.osulogin.apex="${device_keys}"/com.android.hotspot2.osulogin.pem \
-      --extra_apex_payload_key com.android.i18n.apex="${device_keys}"/com.android.i18n.pem \
-      --extra_apex_payload_key com.android.ipsec.apex="${device_keys}"/com.android.ipsec.pem \
-      --extra_apex_payload_key com.android.media.apex="${device_keys}"/com.android.media.pem \
-      --extra_apex_payload_key com.android.media.swcodec.apex="${device_keys}"/com.android.media.swcodec.pem \
-      --extra_apex_payload_key com.android.mediaprovider.apex="${device_keys}"/com.android.mediaprovider.pem \
-      --extra_apex_payload_key com.android.nearby.halfsheet.apex="${device_keys}"/com.android.nearby.halfsheet.pem \
-      --extra_apex_payload_key com.android.networkstack.tethering.apex="${device_keys}"/com.android.networkstack.tethering.pem \
-      --extra_apex_payload_key com.android.neuralnetworks.apex="${device_keys}"/com.android.neuralnetworks.pem \
-      --extra_apex_payload_key com.android.ondevicepersonalization.apex="${device_keys}"/com.android.ondevicepersonalization.pem \
-      --extra_apex_payload_key com.android.os.statsd.apex="${device_keys}"/com.android.os.statsd.pem \
-      --extra_apex_payload_key com.android.permission.apex="${device_keys}"/com.android.permission.pem \
-      --extra_apex_payload_key com.android.resolv.apex="${device_keys}"/com.android.resolv.pem \
-      --extra_apex_payload_key com.android.rkpd.apex="${device_keys}"/com.android.rkpd.pem \
-      --extra_apex_payload_key com.android.runtime.apex="${device_keys}"/com.android.runtime.pem \
-      --extra_apex_payload_key com.android.safetycenter.resources.apex="${device_keys}"/com.android.safetycenter.resources.pem \
-      --extra_apex_payload_key com.android.scheduling.apex="${device_keys}"/com.android.scheduling.pem \
-      --extra_apex_payload_key com.android.sdkext.apex="${device_keys}"/com.android.sdkext.pem \
-      --extra_apex_payload_key com.android.support.apexer.apex="${device_keys}"/com.android.support.apexer.pem \
-      --extra_apex_payload_key com.android.telephony.apex="${device_keys}"/com.android.telephony.pem \
-      --extra_apex_payload_key com.android.telephonymodules.apex="${device_keys}"/com.android.telephonymodules.pem \
-      --extra_apex_payload_key com.android.tethering.apex="${device_keys}"/com.android.tethering.pem \
-      --extra_apex_payload_key com.android.tzdata.apex="${device_keys}"/com.android.tzdata.pem \
-      --extra_apex_payload_key com.android.uwb.apex="${device_keys}"/com.android.uwb.pem \
-      --extra_apex_payload_key com.android.uwb.resources.apex="${device_keys}"/com.android.uwb.resources.pem \
-      --extra_apex_payload_key com.android.virt.apex="${device_keys}"/com.android.virt.pem \
-      --extra_apex_payload_key com.android.vndk.current.apex="${device_keys}"/com.android.vndk.current.pem \
-      --extra_apex_payload_key com.android.vndk.current.on_vendor.apex="${device_keys}"/com.android.vndk.current.on_vendor.pem \
-      --extra_apex_payload_key com.android.wifi.apex="${device_keys}"/com.android.wifi.pem \
-      --extra_apex_payload_key com.android.wifi.dialog.apex="${device_keys}"/com.android.wifi.dialog.pem \
-      --extra_apex_payload_key com.android.wifi.resources.apex="${device_keys}"/com.android.wifi.resources.pem \
-      --extra_apex_payload_key com.google.pixel.camera.hal.apex="${device_keys}"/com.google.pixel.camera.hal.pem \
-      --extra_apex_payload_key com.google.pixel.vibrator.hal.apex="${device_keys}"/com.google.pixel.vibrator.hal.pem \
-      --extra_apex_payload_key com.qorvo.uwb.apex="${device_keys}"/com.qorvo.uwb.pem \
+
+      # Sign build
+      [[ -n "${ANDROID_PW_FILE}" ]] && echo "INFO: ANDROID_PW_FILE=${ANDROID_PW_FILE}"
+      sign_target_files_apks -o -d "${device_keys}" $(extra_apks_args) \
       "${OUT}"/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip signed-target_files.zip
 
       # Package Files
@@ -467,9 +370,11 @@ do
     done
   elif grep -q "${android_platform}" <<< "grapheneos"
   then
-    keys_password="KEYS_PASSWORD_${device^^}"
-
     echo "INFO: Building GrapheneOS-${android_version_number} for ${device}"
+
+    # Generate signing keys
+    [[ -z "${keys_dir}" ]] && echo "Keys Dir is required for signing build" && usage
+    make_grapheneos_keys
 
     # Determine latest stable tag
     if [[ -z "${grapheneos_latest_tag}" ]]
@@ -588,8 +493,8 @@ do
     if [[ "${yarn}" == "1" ]]
     then
       echo "INFO: Extracting vendor files"
-      rm -rf vendor/adevtool/node_modules/
-      yarnpkg install --cwd vendor/adevtool/
+      rm -rf vendor/adevtool/node_modules
+      yarnpkg install --cwd vendor/adevtool
       lunch sdk_phone64_x86_64-cur-user
       m aapt2
       rm -rf vendor/google_devices/*
@@ -656,5 +561,5 @@ do
   # Remove device-specific settings
   [[ -L "keys/${device}" ]] && rm -rf keys/"${device}"
   echo "INFO: Build for ${device} finished"
-  unset device
+  unset ANDROID_PW_FILE device device_keys keys_password
 done
