@@ -446,7 +446,7 @@ do
       [[ -f /.dockerenv ]] && repo_safe_dir
       repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"
       sync_repo
-      ./build_"${device_family}".sh --config=use_source_tree_aosp --config=no_download_gki --lto=full
+      ./build_"${device_family}".sh --config=use_source_tree_aosp --config=no_download_gki --config=no_download_gki_fips140 --lto=full
       cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
     # 8th gen
     elif grep -q "${device}" <<< "husky shiba akita"
