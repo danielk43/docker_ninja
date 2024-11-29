@@ -36,7 +36,7 @@ make_grapheneos_keys() {
       echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${dname}" > /dev/null 2>&1 || echo "creating ${key}.pk8"
     done
     openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -passout pass:"${!keys_password}" -out avb.pem && echo "creating avb.pem"
-    expect <<END
+    expect << END
       set timeout -1
       spawn ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin
       expect -exact "Enter pass phrase for avb.pem:"

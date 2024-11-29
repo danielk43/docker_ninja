@@ -3,7 +3,6 @@
 # shellcheck disable=SC2015,SC2046,SC2206
 # shellcheck source=/dev/null
 
-# TODO: Fix keys in loop
 # TODO: Long / better opts
 # TODO: Optional avb
 
@@ -294,7 +293,7 @@ do
     then
       mkdir "${device_keys}" 2> /dev/null || true
     fi
-    ln -s "${device_keys}" "${android_top}"/keys 2> /dev/null || true
+    ln -s "${device_keys}" "${android_top}"/keys 2> /dev/null || echo "WARN: Linking ${device} device keys failed"
   fi
 
   # Create outfile directory
@@ -559,7 +558,7 @@ do
   fi
 
   # Remove device-specific settings
-  [[ -L "keys/${device}" ]] && rm -rf keys/"${device}"
+  [[ -L "keys/${device}" ]] && rm -f "keys/${device}"
   echo "INFO: Build for ${device} finished"
   unset ANDROID_PW_FILE device device_keys keys_password
 done
