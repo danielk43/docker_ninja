@@ -57,7 +57,7 @@ make_lineageos_keys() {
     [[ -z "${dname}" ]] && dname="/CN=Android/"
     for key in "${LINEAGEOS_SIGNING_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${dname}" > /dev/null 2>&1 || echo "creating ${key}.pk8"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${dname}" > /dev/null 2>&1 || echo -e "creating ${key}.pk8\ncreating ${key}.pem"
       if [[ -n "${!keys_password}" ]]
       then
         echo "[[[ ${!keys_password} ]]] ${device_keys}/${key}" >> pw_file
@@ -65,9 +65,10 @@ make_lineageos_keys() {
     done
     for apex in "${LINEAGEOS_APEX_KEYS[@]}"
     do
-      echo -e "${!keys_password}\n${!keys_password}" | "${MAKE_KEY}" "${apex}" "${dname}" > /dev/null 2>&1 || echo "creating ${apex}.pk8"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${apex}" "${dname}" > /dev/null 2>&1 || echo -e "creating ${apex}.pk8\ncreating ${apex}.pem"
       if [[ -n "${!keys_password}" ]]
       then
+        openssl pkcs8 -in "${apex}".pk8 -inform DER -passin pass:"${!keys_password}" -out "${apex}".pem
         echo "[[[ ${!keys_password} ]]] ${device_keys}/${apex}" >> pw_file
       fi
     done

@@ -293,7 +293,7 @@ do
     then
       mkdir "${device_keys}" 2> /dev/null || true
     fi
-    ln -s "${device_keys}" "${android_top}"/keys 2> /dev/null || echo "WARN: Linking ${device} device keys failed"
+    ln -s "${device_keys}" "${android_top}"/keys 2> /dev/null || echo "WARN: Linking ${device} signing keys failed"
   fi
 
   # Create outfile directory
