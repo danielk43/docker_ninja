@@ -511,6 +511,7 @@ do
       build_id=$(grep "(BUILD_ID)" vendor/google_devices/"${device}"/"${device}".mk | head -n1 | cut -d, -f2 | tr -d \))
       export build_id
       export release_id=${build_id%%.*}
+      cp -f build/release/flag_values/cur/* build/release/flag_values/"${release_id,,}"
       combo="${device}-${release_id,,}-${variant}"
     else
       combo="${device}-${variant}"
