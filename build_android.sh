@@ -375,23 +375,27 @@ do
     [[ -z "${keys_dir}" ]] && echo "Keys Dir is required for signing build" && usage
     make_grapheneos_keys
 
-    # Determine latest stable tag
-    if [[ -z "${grapheneos_latest_tag}" ]]
+    # Determine ref to build on
+    if [[ "${grapheneos_tag,,}" == "latest" && -z "${grapheneos_latest_tag}" ]]
     then
       grapheneos_latest_tag=$(curl -sL https://grapheneos.org/releases | xmllint --html --xpath "/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()" - 2> /dev/null)
-      if [[ "${grapheneos_tag,,}" == "latest" && "${grapheneos_latest_tag}" =~ ^[[:digit:]]{10}$ ]]
-      then
-        echo "INFO: GrapheneOS tag set to \"latest\", using latest stable tag: ${grapheneos_latest_tag}"
-        grapheneos_tag=${grapheneos_latest_tag}
-      else
-        echo "FATAL: GrapheneOS latest tag query error" && exit 1
-      fi
+      grapheneos_tag=${grapheneos_latest_tag}
+    fi
+    if [[ "${grapheneos_tag}" =~ ^[[:digit:]]{10}$ ]]
+    then
+      echo "INFO: GrapheneOS tag set to \"${grapheneos_tag}\""
+    elif [[ "${grapheneos_tag}" =~ ^dev$|^development$|^$ ]]
+    then
+      grapheneos_tag=dev
+      echo "INFO: building on GrapheneOS development branch"
+    else
+      echo "FATAL: GrapheneOS tag: \"${grapheneos_tag}\" does not match expected format" && usage
     fi
 
     # Sync GrapheneOS repo
     [[ -f /.dockerenv ]] && repo_safe_dir
     clean_repo
-    if [[ -n "${grapheneos_tag}" && ! "${grapheneos_tag}" =~ ^dev$|^development$ ]]
+    if [[ "${grapheneos_tag}" != "dev" ]]
     then
       repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${grapheneos_tag}"
       mkdir ~/.ssh 2> /dev/null || true
