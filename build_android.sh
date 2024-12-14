@@ -15,6 +15,7 @@ variant="userdebug"
 retries=7
 roomservice=0
 sign_lineageos=0
+clean_repo=0
 yarn=0
 
 usage() {
@@ -39,6 +40,7 @@ usage() {
   echo "    -i offIcial grapheneos build (must configure update server url)"
   echo "    -j number of Jobs during repo sync (defaults to nproc)"
   echo "    -k lineageos Keys dir (enforced if -s is set, requires each device dir with keyfiles inside)"
+  echo "    -l deep cLean android src (git expire reflog, prune now)"
   echo "    -m gms Makefle (set filename if vendor/partner_gms exists, also sets WITH_GMS=true)"
   echo "    -n grapheneos kerNel root directory (above each device family repo)"
   echo "    -o Out dir for completed build images (defaults to \$ANDROID_BUILD_TOP/releases)"
@@ -58,7 +60,7 @@ usage() {
   exit 1
 }
 
-while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hirsy" opt; do
+while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hilrsy" opt; do
   case $opt in
     a) export android_top="$OPTARG" ;;
     b) build_type="$OPTARG" ;;
@@ -71,6 +73,7 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hirsy" opt; do
     i) export OFFICIAL_BUILD=true ;;
     j) sync_jobs="$OPTARG" ;;
     k) export keys_dir="$OPTARG" ;;
+    l) clean_repo=1 ;;
     m) gms_makefile="$OPTARG" ;;
     n) kernel_dir="$OPTARG" ;;
     o) out_dir="$OPTARG" ;;
@@ -166,6 +169,7 @@ export BUILD_HOME="${PWD}"
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}
+[[ -n "${CLEAN_REPO}" && "${CLEAN_REPO}" != "false" ]] && export clean_repo=1
 [[ -n "${DELETE_ROOMSERVICE}" && "${DELETE_ROOMSERVICE}" != "false" ]] && export roomservice=1
 [[ -n "${SIGN_LINEAGEOS}" && "${SIGN_LINEAGEOS}" != "false" ]] && export sign_lineageos=1
 [[ -n "${YARN}" && "${YARN}" != "false" ]] && export yarn=1
@@ -567,3 +571,10 @@ do
   echo "INFO: Build for ${device} finished"
   unset ANDROID_PW_FILE device device_keys keys_password
 done
+
+# Deep clean android and chromium src
+[[ "${clean_repo}" == "1" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${android_top}"
+[[ "${clean_repo}" == "1" && -d "${vanadium_dir}/.git" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${vanadium_dir}"
+[[ "${clean_repo}" == "1" && -d "${vanadium_dir}/src" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cgx -d "${vanadium_dir}/src"
+
+exit 0

@@ -15,6 +15,7 @@ ENV REBASELINE_PROGUARD=1
 
 ENV ANDROID_VERSION=""
 ENV BUILD_VARIANT=userdebug
+ENV CLEAN_REPO=""
 ENV DELETE_ROOMSERVICE=""
 ENV DEVICES=""
 ENV DNAME=""
@@ -58,6 +59,7 @@ RUN mkdir bin \
  && ln -sf /proc/1/fd/1 /var/log/docker.log
 
 COPY --chmod=0755 build_android.sh build_android.sh
+COPY --chmod=0755 git_deep_clean.sh git_deep_clean.sh
 COPY --chmod=0755 signing_keys.sh signing_keys.sh
 
 CMD ["/bin/bash", "build_android.sh"]
