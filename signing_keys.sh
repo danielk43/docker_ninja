@@ -39,8 +39,13 @@ make_grapheneos_keys() {
     expect << END
       set timeout -1
       spawn ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin
-      expect -exact "Enter pass phrase for avb.pem:"
-      send -- "${!keys_password}\r${!keys_password}\r"
+      expect "Enter pass phrase"
+      send -- "${!keys_password}\r"
+      spawn ssh-keygen -t ed25519 -f id_ed25519
+      expect "Enter passphrase"
+      send -- "${!keys_password}\r"
+      expect "Enter same passphrase"
+      send -- "${!keys_password}\r"
       expect eof
 END
   else
