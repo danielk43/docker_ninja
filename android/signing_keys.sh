@@ -32,9 +32,9 @@ make_grapheneos_keys() {
   then
     for key in "${GRAPHENEOS_SIGNING_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" > /dev/null 2>&1 || echo "creating ${key}.pk8"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" >/dev/null 2>&1 || echo "creating ${key}.pk8"
     done
-    openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -passout pass:"${!keys_password}" -out avb.pem && echo "creating avb.pem"
+    openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -passout pass:"${!keys_password}" -out avb.pem >/dev/null
     expect << EOF
       set timeout -1
       spawn ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin
@@ -64,7 +64,7 @@ make_lineageos_keys() {
   then
     for key in "${LINEAGEOS_SIGNING_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" > /dev/null 2>&1 || echo -e "creating ${key}.pk8\ncreating ${key}.pem"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" >/dev/null 2>&1 || echo -e "creating ${key}.pk8"
       if [[ -n "${!keys_password}" ]]
       then
         echo "[[[ ${!keys_password} ]]] ${device_keys}/${key}" >> pw_file
@@ -72,15 +72,15 @@ make_lineageos_keys() {
     done
     for apex in "${LINEAGEOS_APEX_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${apex}" "${android_dname}" > /dev/null 2>&1 || echo -e "creating ${apex}.pk8\ncreating ${apex}.pem"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${apex}" "${android_dname}" >/dev/null 2>&1 || echo -e "creating ${apex}.pk8"
       if [[ -n "${!keys_password}" ]]
       then
-        openssl pkcs8 -in "${apex}".pk8 -inform DER -passin pass:"${!keys_password}" -out "${apex}".pem
+        openssl pkcs8 -in "${apex}".pk8 -inform DER -passin pass:"${!keys_password}" -out "${apex}".pem >/dev/null
         echo "[[[ ${!keys_password} ]]] ${device_keys}/${apex}" >> pw_file
       fi
     done
     openssl genrsa 4096 | openssl pkcs8 -topk8 -nocrypt -out avb.pem && echo "creating avb.pem"
-    ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin > /dev/null && echo "creating avb_pkmd.bin"
+    ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin >/dev/null && echo "creating avb_pkmd.bin"
   else
     echo "INFO: ${device_keys} not empty, skipping keygen"
   fi
