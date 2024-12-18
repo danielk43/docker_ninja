@@ -11,10 +11,11 @@ docker run --rm \
 -e "ANDROID_VERSION=grapheneos-14" \
 -e "BUILD_VARIANT=user" \
 -e "CCACHE_SIZE=100G" \
--e "DEVICES=lynx raven" \
+-e "CLEAN_REPO=true" \
+-e "DEVICES=lynx shiba" \
 -e "GRAPHENEOS_TAG=latest" \
 -e "KEYS_PASSWORD_LYNX=${KEYS_PASSWORD_LYNX}" \
--e "KEYS_PASSWORD_RAVEN=${KEYS_PASSWORD_RAVEN}" \
+-e "KEYS_PASSWORD_SHIBA=${KEYS_PASSWORD_SHIBA}" \
 -e "USER_SCRIPTS=/android_build/scripts/apply_patches1.sh" \
 -e "VANADIUM_PASSWORD=${VANADIUM_PASSWORD}" \
 -e "YARN=true" \
@@ -25,7 +26,7 @@ docker run --rm \
 -v "/path/to/scripts:/android_build/scripts" \
 -v "/path/to/src:/android_build/src" \
 -v "/path/to/vanadium:/android_build/vanadium" \
-danielk43/docker_ninja:latest
+danielk43/docker_ninja_android:latest
 ```
 
 LineageOS example
@@ -35,6 +36,7 @@ docker run --rm \
 -e "BUILD_TYPE=mdklabs" \
 -e "BUILD_VARIANT=user" \
 -e "CCACHE_SIZE=100G" \
+-e "CLEAN_REPO=true" \
 -e "DELETE_ROOMSERVICE=true" \
 -e "DEVICES=barbet" \
 -e "SCRIPTS_DIR=/android_build/scripts" \
@@ -47,7 +49,7 @@ docker run --rm \
 -v "/path/to/android/lineageos/ROMs:/android_build/out" \
 -v "/path/to/scripts:/android_build/scripts" \
 -v "/path/to/src:/android_build/src" \
-danielk43/docker_ninja:latest
+danielk43/docker_ninja_android:latest
 ```
 
 ### Standalone / Host

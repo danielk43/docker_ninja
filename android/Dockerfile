@@ -57,6 +57,7 @@ RUN mkdir bin \
  && rm -rf /var/cache/apt/* \
  && npm install --global --upgrade yarn \
  && npm cache clean --force \
+ && echo 'alias ll="ls -alF"' >> /root/.bashrc \
  && ln -sf /proc/1/fd/1 /var/log/docker.log
 
 COPY --chmod=0755 build_android.sh build_android.sh
