@@ -12,11 +12,13 @@ build_date=$(TZ=UTC date +%Y%m%d)
 sync_jobs=$(nproc)
 ccache_size=50G
 variant="userdebug"
-retries=7
+retries=5
 roomservice=0
 sign_lineageos=0
 clean_repo=0
 yarn=0
+export android_dname="/CN=Android/"
+export chromium_dname="/CN=Chromium/"
 
 usage() {
   echo "Usage:"
@@ -35,7 +37,7 @@ usage() {
   echo "    -d space-separated Device codenames to build (\"device1 device2 ...\")"
   echo "    -e space-separated extra Env vars to be exported (\"k1=v1 k2=v2 ...\")"
   echo "    -f target build Flavor / variant (defaults to userdebug. also accepts user, eng)"
-  echo "    -g Generate keys distinguished name (defaults per os flavor, idempotent)"
+  echo "    -g Android keys distinGuished name (defaults to \"/CN=Android/\")"
   echo "    -h print this Help menu and exit"
   echo "    -i offIcial grapheneos build (must configure update server url)"
   echo "    -j number of Jobs during repo sync (defaults to nproc)"
@@ -45,6 +47,7 @@ usage() {
   echo "    -n grapheneos kerNel root directory (above each device family repo)"
   echo "    -o Out dir for completed build images (defaults to \$ANDROID_BUILD_TOP/releases)"
   echo "    -p number of retries for rePo sync if errors encountered (defaults to 7)"
+  echo "    -q Chromium keys distinguished name (defaults to \"/CN=Chromium/\")"
   echo "    -r delete Roomservice.xml (if local_manifests are user-defined)"
   echo "    -s Sign lineageos build (requires keys, see https://wiki.lineageos.org/signing_builds)"
   echo "    -t grapheneos release Tag (or \"latest\" for latest stable, omit or \"dev\" for development)"
@@ -60,7 +63,7 @@ usage() {
   exit 1
 }
 
-while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hilrsy" opt; do
+while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:hilrsy" opt; do
   case $opt in
     a) export android_top="$OPTARG" ;;
     b) build_type="$OPTARG" ;;
@@ -68,7 +71,7 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hilrsy" opt; do
     d) device_list="$OPTARG" ;;
     e) env_vars="$OPTARG" ;;
     f) variant="$OPTARG" ;;
-    g) export dname="$OPTARG" ;;
+    g) export android_dname="$OPTARG" ;;
     h) usage ;;
     i) export OFFICIAL_BUILD=true ;;
     j) sync_jobs="$OPTARG" ;;
@@ -78,6 +81,7 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:t:u:v:x:hilrsy" opt; do
     n) kernel_dir="$OPTARG" ;;
     o) out_dir="$OPTARG" ;;
     p) retries="$OPTARG" ;;
+    q) export chromium_dname="$OPTARG" ;;
     r) roomservice=1 ;;
     s) sign_lineageos=1 ;;
     t) grapheneos_tag="$OPTARG" ;;
@@ -163,7 +167,8 @@ export BUILD_HOME="${PWD}"
 [[ -n "${BUILD_VARIANT}" ]] && export variant=${BUILD_VARIANT}
 [[ -n "${CCACHE_SIZE}" ]] && export ccache_size=${CCACHE_SIZE}
 [[ -n "${DEVICES}" ]] && export device_list=${DEVICES}
-[[ -n "${DNAME}" ]] && export dname=${DNAME}
+[[ -n "${DNAME_ANDROID}" ]] && export android_dname=${DNAME_ANDROID}
+[[ -n "${DNAME_CHROMIUM}" ]] && export chromium_dname=${DNAME_CHROMIUM}
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
 [[ -n "${GRAPHENEOS_TAG}" ]] && export grapheneos_tag=${GRAPHENEOS_TAG}
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
@@ -243,7 +248,7 @@ then
     then
       echo -e "${VANADIUM_PASSWORD}\n${VANADIUM_PASSWORD}" | \
       keytool -genkey -v -keystore vanadium.keystore -storetype pkcs12 -alias vanadium \
-      -keyalg RSA -keysize 4096 -sigalg SHA512withRSA -validity 10000 -dname "cn=GrapheneOS"
+      -keyalg RSA -keysize 4096 -sigalg SHA512withRSA -validity 10000 -dname "${chromium_dname}"
     fi
 
     keystore_sha=$(echo "${VANADIUM_PASSWORD}" | keytool -export-cert -alias vanadium -keystore vanadium.keystore | sha256sum | awk '{print $1}')
@@ -562,8 +567,7 @@ do
       "${out_dir}"/"${device}"/"${BUILD_NUMBER}"/"${device}"-"${installer}"-"${BUILD_NUMBER}".zip.sig
     fi
   else
-    echo "FATAL: Only GrapheneOS and LineageOS are supported"
-    exit 1
+    echo "FATAL: Build not supported" && usage
   fi
 
   # Remove device-specific settings

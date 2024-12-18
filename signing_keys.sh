@@ -30,24 +30,27 @@ make_grapheneos_keys() {
   cd "${device_keys}" || exit
   if test -n "$(find . -maxdepth 0 -empty)"
   then
-    [[ -z "${dname}" ]] && dname="/CN=GrapheneOS/"
     for key in "${GRAPHENEOS_SIGNING_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${dname}" > /dev/null 2>&1 || echo "creating ${key}.pk8"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" > /dev/null 2>&1 || echo "creating ${key}.pk8"
     done
     openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -passout pass:"${!keys_password}" -out avb.pem && echo "creating avb.pem"
-    expect << END
+    expect << EOF
       set timeout -1
       spawn ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin
       expect "Enter pass phrase"
       send -- "${!keys_password}\r"
+      expect eof
+EOF
+    expect << EOF
+      set timeout -1
       spawn ssh-keygen -t ed25519 -f id_ed25519
       expect "Enter passphrase"
       send -- "${!keys_password}\r"
       expect "Enter same passphrase"
       send -- "${!keys_password}\r"
       expect eof
-END
+EOF
   else
     echo "INFO: ${device_keys} not empty, skipping keygen"
   fi
@@ -59,10 +62,9 @@ make_lineageos_keys() {
   sed -i "s/2048/4096/g" "${MAKE_KEY}" # use SHA256_RSA4096
   if test -n "$(find . -maxdepth 0 -empty)"
   then
-    [[ -z "${dname}" ]] && dname="/CN=Android/"
     for key in "${LINEAGEOS_SIGNING_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${dname}" > /dev/null 2>&1 || echo -e "creating ${key}.pk8\ncreating ${key}.pem"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" > /dev/null 2>&1 || echo -e "creating ${key}.pk8\ncreating ${key}.pem"
       if [[ -n "${!keys_password}" ]]
       then
         echo "[[[ ${!keys_password} ]]] ${device_keys}/${key}" >> pw_file
@@ -70,7 +72,7 @@ make_lineageos_keys() {
     done
     for apex in "${LINEAGEOS_APEX_KEYS[@]}"
     do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${apex}" "${dname}" > /dev/null 2>&1 || echo -e "creating ${apex}.pk8\ncreating ${apex}.pem"
+      echo "${!keys_password}" | "${MAKE_KEY}" "${apex}" "${android_dname}" > /dev/null 2>&1 || echo -e "creating ${apex}.pk8\ncreating ${apex}.pem"
       if [[ -n "${!keys_password}" ]]
       then
         openssl pkcs8 -in "${apex}".pk8 -inform DER -passin pass:"${!keys_password}" -out "${apex}".pem
