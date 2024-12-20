@@ -18,7 +18,7 @@ sign_lineageos=0
 clean_repo=0
 yarn=0
 export android_dname="/CN=Android/"
-export chromium_dname="/CN=Chromium/"
+export chromium_dname="CN=Chromium"
 
 usage() {
   echo "Usage:"
