@@ -434,7 +434,7 @@ do
     sync_repo
     source build/envsetup.sh > /dev/null
 
-    [[ -n "${grapheneos_tag}" ]] && export BUILD_NUMBER=${grapheneos_tag}
+    [[ -n "${grapheneos_latest_tag}" ]] && export BUILD_NUMBER=${grapheneos_tag}
     echo "BUILD_DATETIME=${BUILD_DATETIME} BUILD_NUMBER=${BUILD_NUMBER}"
 
     mkdir -p "${out_dir}"/"${device}"/"${BUILD_NUMBER}" 2> /dev/null || true
