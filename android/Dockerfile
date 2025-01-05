@@ -14,6 +14,7 @@ ENV CCACHE_SIZE=50G
 ENV REBASELINE_PROGUARD=1
 
 ENV ANDROID_VERSION=""
+ENV BUILD_TYPE=""
 ENV BUILD_VARIANT=userdebug
 ENV CLEAN_REPO=""
 ENV DELETE_ROOMSERVICE=""
@@ -24,14 +25,14 @@ ENV GMS_MAKEFILE=""
 ENV GRAPHENEOS_TAG=""
 ENV LINEAGE_BUILDTYPE=""
 ENV OFFICIAL_BUILD=""
-ENV SIGN_LINEAGEOS=""
+ENV PRINT_ENV=""
+ENV SIGN_BUILD=""
 ENV SYNC_JOBS=""
 ENV SYNC_RETRIES=""
 ENV USER_SCRIPTS=""
 ENV YARN=""
 
-RUN mkdir bin \
- && apt update \
+RUN apt update \
  && apt -y upgrade \
  && apt -y install curl git-core zip \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
@@ -40,13 +41,24 @@ RUN mkdir bin \
  && curl -L https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo \
  && chmod a+x /usr/local/bin/repo \
  && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
+ && curl -LO $(curl -s https://api.github.com/repos/protocolbuffers/protobuf/releases/latest \
+  | grep "browser_download_url.*linux-x86_64.zip" | cut -d\" -f4) \
+ && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
+ && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
  && curl -L https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
  && curl -L https://deb.nodesource.com/setup_20.x | bash \
- && apt install -y bc binutils bison build-essential ccache cgpt expect flex g++-multilib gcc-multilib \
-    git-lfs gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev \
-    libgcc-s1 libkrb5-dev liblz4-tool libncurses5 libnss3-dev libsdl1.2-dev libssl-dev libxml2 \
-    libxml2-utils lzop nodejs openjdk-17-jdk openssh-server pngcrush python-is-python3 python3 \
-    rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
+ && gradle_version=$(curl -sL https://gradle.org/releases \
+  | xmllint --html --xpath "/html/body/div[2]/div/main/div/h3[1]/span[2]/text()" - \
+ 2> /dev/null | tr -d v) \
+ && curl -LO https://services.gradle.org/distributions/gradle-${gradle_version}-bin.zip \
+ && unzip -d $(dirname "${GRADLE_HOME}") gradle-*.zip \
+ && mv "${GRADLE_HOME}"-* "${GRADLE_HOME}" \
+ && apt install -y bc binutils bison build-essential ccache cgpt expect file flex g++-multilib \
+    gcc-multilib git-lfs gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev \
+    libelf-dev libgcc-s1 libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev \
+    libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs openjdk-17-jdk openssh-server pngcrush \
+    python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
+ && pip3 install --break-system-packages --no-cache-dir protobuf \
  && HOME=/root git config --global user.name "Docker CI Bot" \
  && HOME=/root git config --global user.email "ci-bot@docker.local" \
  && HOME=/root git config --global advice.detachedHead false \
@@ -54,14 +66,16 @@ RUN mkdir bin \
  && HOME=/root git config --global pack.windowMemory "4096m" \
  && apt -y autoremove \
  && apt autoclean \
- && rm -rf /var/cache/apt/* \
+ && rm -rf /var/cache/apt/* *.zip \
  && npm install --global --upgrade yarn \
  && npm cache clean --force \
  && echo 'alias ll="ls -alF"' >> /root/.bashrc \
  && ln -sf /proc/1/fd/1 /var/log/docker.log
 
-COPY --chmod=0755 build_android.sh build_android.sh
-COPY --chmod=0755 git_deep_clean.sh git_deep_clean.sh
-COPY --chmod=0755 signing_keys.sh signing_keys.sh
+COPY --chmod=0755 make_common.sh android/make_common.sh
+COPY --chmod=0755 git_deep_clean.sh android/git_deep_clean.sh
+COPY --chmod=0755 calyxos android/calyxos
+COPY --chmod=0755 grapheneos android/grapheneos
+COPY --chmod=0755 lineageos android/lineageos
 
-CMD ["/bin/bash", "build_android.sh"]
+CMD ["/bin/bash", "android/make_common.sh"]

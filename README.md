@@ -33,7 +33,7 @@ LineageOS example
 ```
 docker run --rm \
 -e "ANDROID_VERSION=lineageos-20.0" \
--e "BUILD_TYPE=mdklabs" \
+-e "BUILD_TYPE=custom" \
 -e "BUILD_VARIANT=user" \
 -e "CCACHE_SIZE=100G" \
 -e "CLEAN_REPO=true" \

@@ -4,7 +4,6 @@
 
 export AVB_TOOL="${android_top}/external/avb/avbtool.py"
 export MAKE_KEY="${android_top}/development/tools/make_key"
-export GRAPHENEOS_SIGNING_KEYS=(bluetooth media networkstack platform releasekey sdk_sandbox shared)
 export LINEAGEOS_SIGNING_KEYS=(bluetooth cyngn-app media networkstack nfc platform releasekey sdk_sandbox shared testcert testkey verity)
 export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.adservices.api com.android.appsearch \
                           com.android.appsearch.apk com.android.art com.android.bluetooth com.android.btservices \
@@ -25,37 +24,6 @@ export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.
                           com.android.virt com.android.vndk.current com.android.vndk.current.on_vendor com.android.wifi \
                           com.android.wifi.dialog com.android.wifi.resources com.google.pixel.camera.hal \
                           com.google.pixel.vibrator.hal com.qorvo.uwb)
-
-make_grapheneos_keys() {
-  cd "${device_keys}" || exit
-  if test -n "$(find . -maxdepth 0 -empty)"
-  then
-    for key in "${GRAPHENEOS_SIGNING_KEYS[@]}"
-    do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" >/dev/null 2>&1 || echo "creating ${key}.pk8"
-    done
-    openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -passout pass:"${!keys_password}" -out avb.pem >/dev/null
-    expect << EOF
-      set timeout -1
-      spawn ${AVB_TOOL} extract_public_key --key avb.pem --output avb_pkmd.bin
-      expect "Enter pass phrase"
-      send -- "${!keys_password}\r"
-      expect eof
-EOF
-    expect << EOF
-      set timeout -1
-      spawn ssh-keygen -t ed25519 -f id_ed25519
-      expect "Enter passphrase"
-      send -- "${!keys_password}\r"
-      expect "Enter same passphrase"
-      send -- "${!keys_password}\r"
-      expect eof
-EOF
-  else
-    echo "INFO: ${device_keys} not empty, skipping keygen"
-  fi
-  cd "${android_top}" || exit
-}
 
 make_lineageos_keys() {
   cd "${device_keys}" || exit

@@ -106,3 +106,4 @@ repo_safe_dir
 [[ "$prune" == "1" ]] && prune_src
 
 exit 0
+
