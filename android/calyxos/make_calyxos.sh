@@ -59,11 +59,12 @@ do
   ((xmx = $(free -m | grep Mem | awk '{print $4}')/2))
   export JAVA_OPTS="-Xmx${xmx}m"
   echo "mapbox.key=${mapbox_key}" > local.properties
-  gradle --no-daemon build
+  gradle build --no-daemon
+  mv play-services-core-withMapbox-withNearby-release-unsigned.apk "${android_top}"/prebuilts/calyx/microg/GmsCore/GmsCore.apk
   cd "${android_top}"
 
   # Build Chromium
-  cd 
+  # TODO: reuse vanadium script
 
   # Build OS
   echo "INFO: Breakfast combo: ${combo}"

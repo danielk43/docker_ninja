@@ -52,6 +52,25 @@ docker run --rm \
 danielk43/docker_ninja_android:latest
 ```
 
+CalyxOS example
+```
+docker run --rm \
+-e "BUILD_TYPE=custom" \
+-e "BUILD_VARIANT=user" \
+-e "CCACHE_SIZE=100G" \
+-e "CLEAN_REPO=false" \
+-e "DEVICES=barbet" \
+-e "MAPBOX_KEY=${MAPBOX_KEY}" \
+-e "SIGN_BUILD=true" \
+-v "/path/to/.ccache/android_build/ccache" \
+-v "/path/to/android/calyxos/keys:/android_build/keys" \
+-v "/path/to/android/calyxos/ROMs:/android_build/out" \
+-v "/path/to/android_build/scripts" \
+-v "/path/to/vendor/tmp:/tmp/pixels" \
+-v "/path/to/android_build/src" \
+danielk43/docker_ninja_android:latest
+```
+
 ### Standalone / Host
 (not recommended)
 

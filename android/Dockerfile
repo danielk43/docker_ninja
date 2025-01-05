@@ -5,12 +5,14 @@ ARG HOME=/android_build
 
 WORKDIR $HOME
 
-ENV PATH="$HOME/depot_tools:$HOME/platform-tools:$PATH"
+ENV ANDROID_HOME=$HOME/cmdline-tools
 ENV USE_CCACHE=1
 ENV CCACHE_COMPRESSLEVEL=1
 ENV CCACHE_DIR=$HOME/ccache
 ENV CCACHE_EXEC=/usr/bin/ccache
 ENV CCACHE_SIZE=50G
+ENV GRADLE_HOME=/opt/gradle
+ENV PATH="$HOME/depot_tools:$HOME/platform-tools:$GRADLE_HOME/bin:$PATH"
 ENV REBASELINE_PROGUARD=1
 
 ENV ANDROID_VERSION=""
@@ -47,17 +49,19 @@ RUN apt update \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
  && curl -L https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
  && curl -L https://deb.nodesource.com/setup_20.x | bash \
- && gradle_version=$(curl -sL https://gradle.org/releases \
-  | xmllint --html --xpath "/html/body/div[2]/div/main/div/h3[1]/span[2]/text()" - \
- 2> /dev/null | tr -d v) \
- && curl -LO https://services.gradle.org/distributions/gradle-${gradle_version}-bin.zip \
- && unzip -d $(dirname "${GRADLE_HOME}") gradle-*.zip \
- && mv "${GRADLE_HOME}"-* "${GRADLE_HOME}" \
  && apt install -y bc binutils bison build-essential ccache cgpt expect file flex g++-multilib \
     gcc-multilib git-lfs gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev \
     libelf-dev libgcc-s1 libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev \
     libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs openjdk-17-jdk openssh-server pngcrush \
     python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
+ && curl -LO https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
+ && unzip commandlinetools-linux-*.zip \
+ && yes 'y' | cmdline-tools/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME \
+ && curl -LO https://services.gradle.org/distributions/gradle-"$(curl -sL https://gradle.org/releases \
+  | xmllint --html --xpath "/html/body/div[2]/div/main/div/h3[1]/span[2]/text()" - | tr -d v)"-bin.zip \
+ && unzip -d $(dirname "${GRADLE_HOME}") gradle-*.zip \
+ && mv "${GRADLE_HOME}"-* "${GRADLE_HOME}" \
+ && printf "org.gradle.daemon=false\norg.gradle.welcome=never" >> "${GRADLE_HOME}"/gradle.properties \
  && pip3 install --break-system-packages --no-cache-dir protobuf \
  && HOME=/root git config --global user.name "Docker CI Bot" \
  && HOME=/root git config --global user.email "ci-bot@docker.local" \

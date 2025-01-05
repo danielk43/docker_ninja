@@ -66,7 +66,7 @@ git_reset_clean() {
 
 print_env() {
   export epoch=$(printf "%.0f" $EPOCHREALTIME)
-  [[ "${PRINT_ENV}" == "true" ]] && env | sort > "${device_out}"/"${device}"-"${epoch}".env
+  [[ "${PRINT_ENV}" == "true" ]] && env | sort > "${device_out}"/"${device}"-"${epoch}".env || true
 }
 
 export -f git_reset_clean
@@ -82,9 +82,10 @@ export sign_build=0
 export sync_jobs=$(nproc)
 export variant="userdebug"
 export yarn=0
+export mapbox_key="apikey"
 [[ -n "${env_vars}" ]] && export "${env_vars?}"
 
-while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:hilrswy" opt; do
+while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:z:hilrswy" opt; do
   case $opt in
     a) export android_top="$OPTARG" ;;
     b) build_type="$OPTARG" ;;
@@ -111,6 +112,7 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:hilrswy" opt; do
     w) print_env=1 ;;
     x) chromium_dir="$OPTARG" ;;
     y) yarn=1 ;;
+    z) mapbox_key="$OPTARG" ;;
     :) echo -e "FATAL: Option -$OPTARG requires an argument\n"
        usage ;;
     \?) echo -e "FATAL: Invalid option:-$OPTARG\n"
@@ -129,6 +131,7 @@ shift $((OPTIND-1))
 [[ -n "${DNAME_CHROMIUM}" ]] && export chromium_dname=${DNAME_CHROMIUM}
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
 [[ -n "${GRAPHENEOS_TAG}" ]] && export grapheneos_tag=${GRAPHENEOS_TAG}
+[[ -n "${MAPBOX_KEY}" ]] && export mapbox_key=${MAPBOX_KEY} || export mapbox_key="apikey"
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}
