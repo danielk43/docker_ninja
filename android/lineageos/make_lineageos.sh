@@ -101,7 +101,8 @@ do
   # Create outfile directory
   [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
   device_out="${out_dir}"/"${device}"/"${build_date}"
-  mkdir -p "${device_out}" 2>/dev/null || true
+  rm -rf "${device_out}"
+  mkdir -p "${device_out}" 2>/dev/null
 
   # Move signed build to out dir
   if [[ "${sign_lineageos}" == "1" ]]

@@ -2,8 +2,6 @@
 
 # shellcheck disable=SC2154
 
-export AVB_TOOL="${android_top}/external/avb/avbtool.py"
-export MAKE_KEY="${android_top}/development/tools/make_key"
 export LINEAGEOS_SIGNING_KEYS=(bluetooth cyngn-app media networkstack nfc platform releasekey sdk_sandbox shared testcert testkey verity)
 export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.adservices.api com.android.appsearch \
                           com.android.appsearch.apk com.android.art com.android.bluetooth com.android.btservices \

@@ -28,7 +28,7 @@ do
     echo "FATAL: Device ${device} not supported by CalyxOS" && usage
   fi
 
-  echo "INFO: Building CalyxOS-${android_version_number} for ${device}"
+  echo "INFO: Building CalyxOS ${calyx_version_major} for ${device}"
 
   # Reset COS repo
   [[ -f /.dockerenv ]] && repo_safe_dir
@@ -39,11 +39,11 @@ do
   export otatools_dir="${android_top}"/out/host/linux-x86
   export latest_tag_cmd="https://gitlab.com/api/v4/projects/8459465/repository/tags \
                          | jq -r '[.[] | select(.name | match(\"^${calyx_version_major}.\")).name][0]'"
-  export BUILD_NUMBER="${variant}.signed.${build_date}"
   export RELAX_USES_LIBRARY_CHECK="true"
 
   # Sync CalyxOS repo
   repo_init_ref
+  [[ "${manifest_tag}" =~ ^dev|^$ ]] && manifest_tag="android${android_version_number%.*}"
   if [[ "${manifest_tag}" =~ ^${calyx_version_major}. ]]
   then
     repo init -u https://gitlab.com/CalyxOS/platform_manifest -b refs/tags/"${manifest_tag}" --git-lfs
@@ -52,7 +52,6 @@ do
   fi
   [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
-
   source build/envsetup.sh
 
   # Get vendor image
@@ -85,12 +84,15 @@ do
 
   # Create outfile directory
   [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
-  mkdir -p "${device_out}" 2>/dev/null || true
+  rm -rf "${device_out}"
+  mkdir -p "${device_out}" 2>/dev/null
  
   print_env
 
   if [[ "${sign_build}" == "1" ]]
   then
+    export BUILD_NUMBER="${variant}.signed.${build_date}"
+
     # Generate signing keys
     [[ "${sign_build}" == "1" && -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
     if [[ "${sign_build}" == "1" ]]

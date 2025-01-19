@@ -2,8 +2,6 @@
 
 # shellcheck disable=SC2154
 
-export AVB_TOOL="${android_top}/external/avb/avbtool.py"
-export MAKE_KEY="${android_top}/development/tools/make_key"
 export GRAPHENEOS_SIGNING_KEYS=(bluetooth media networkstack platform releasekey sdk_sandbox shared)
 
 make_grapheneos_keys() {

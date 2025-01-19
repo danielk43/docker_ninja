@@ -91,6 +91,7 @@ do
   export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
                         '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
   repo_init_ref
+  [[ "${manifest_tag}" =~ ^dev|^$ ]] && manifest_tag="${android_version_number%.*}"
   if [[ "${manifest_tag}" != "${android_version_number}" ]]
   then
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${manifest_tag}"
@@ -117,7 +118,7 @@ do
   fi
   [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
-  source build/envsetup.sh > /dev/null
+  source build/envsetup.sh >/dev/null
 
   [[ -n "${grapheneos_latest_tag}" ]] && export BUILD_NUMBER=${grapheneos_tag}
   echo "BUILD_DATETIME=${BUILD_DATETIME} BUILD_NUMBER=${BUILD_NUMBER}"
@@ -198,7 +199,7 @@ do
     rm -rf vendor/google_devices/*
     vendor/adevtool/bin/run generate-all -d "${device}"
   fi
-  [[ ! -d vendor/google_devices/${device} ]] && echo "FATAL: vendor/google_devices/${device} missing" && exit 1
+  [[ ! -d vendor/google_devices/${device} ]] && echo "FATAL: vendor/google_devices/${device} missing" && usage
 
   # Apply User Scripts
   [[ -n "${user_scripts}" ]] && apply_user_scripts
@@ -249,7 +250,8 @@ do
   [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
   [[ "${out_dir}" != "${ANDROID_BUILD_TOP}/releases" ]] && \
   device_out="${out_dir}"/"${device}"/"${BUILD_NUMBER}"
-  mkdir -p "${device_out}" 2>/dev/null || true
+  rm -rf "${device_out}"
+  mkdir -p "${device_out}" 2>/dev/null
 
   # Copy artifacts to out dir
   if [[ "${out_dir}" != "${ANDROID_BUILD_TOP}/releases" ]]

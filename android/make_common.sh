@@ -74,12 +74,6 @@ repo_init_ref() {
   then
     echo "FATAL: Manifest tag: \"${manifest_tag}\" does not match expected format" && usage
   fi
-  if [[ "${manifest_tag}" =~ ^dev|^$ ]]
-  then
-    manifest_tag=$([[ "${android_platform}" =~ "calyxos" ]] \
-                   && printf "android${android_version_number%.*}\n" \
-                   || printf "${android_version_number%.*}\n")
-  fi
   echo "INFO: Building ${android_platform^} on ref: \"${manifest_tag}\""
 }
 
@@ -204,12 +198,14 @@ then
   fi
 fi
 
+[[ -z "${android_platform}" ]] && echo "FATAL: Supported Android platform not found" && exit 1
+[[ ! "${android_version_number}" =~ ^[[:digit:]]{1,2}?.[[:digit:]]$ ]] && echo "FATAL: Could not determine Android version number" && exit 1
+
 export android_platform=${android_platform,,}
 export android_version_number ANDROID_VERSION=${android_version_number}
 export build_path="${BUILD_HOME}"/android/"${android_platform}"
-
-[[ -z "${android_platform}" ]] && echo "FATAL: Supported Android platform not found" && exit 1
-[[ ! "${android_version_number}" =~ ^[[:digit:]]{2}?.[[:digit:]]$ ]] && echo "FATAL: Could not determine Android version number" && exit 1
+export AVB_TOOL="${android_top}/external/avb/avbtool.py"
+export MAKE_KEY="${android_top}/development/tools/make_key"
 
 . "${build_path}"/make_"${android_platform}".sh 
 

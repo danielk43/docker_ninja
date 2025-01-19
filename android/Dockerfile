@@ -35,17 +35,7 @@ ENV YARN=""
 
 RUN apt update \
  && apt -y upgrade \
- && apt -y install curl git-core zip \
- && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
- && unzip platform-tools-latest-linux.zip \
- && rm -f platform-tools-latest-linux.zip \
- && curl -L https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo \
- && chmod a+x /usr/local/bin/repo \
- && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
- && curl -LO $(curl -s https://api.github.com/repos/protocolbuffers/protobuf/releases/latest \
-  | grep "browser_download_url.*linux-x86_64.zip" | cut -d\" -f4) \
- && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
- && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
+ && apt -y install curl git-core \
  && curl -L https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
  && curl -L https://deb.nodesource.com/setup_20.x | bash \
  && apt install -y bc binutils bison build-essential ccache cgpt expect file flex g++-multilib \
@@ -55,25 +45,24 @@ RUN apt update \
     python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
- && rm -f platform-tools-latest-linux.zip \
+ && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
  && curl -L https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo \
  && chmod a+x /usr/local/bin/repo \
- && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
  && curl -LO $(curl -s https://api.github.com/repos/protocolbuffers/protobuf/releases/latest \
   | grep "browser_download_url.*linux-x86_64.zip" | cut -d\" -f4) \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
  && pip3 install --break-system-packages --no-cache-dir lxml protobuf pyyaml \
- && HOME=/root git config --global user.name "Docker CI Bot" \
- && HOME=/root git config --global user.email "ci-bot@docker.local" \
- && HOME=/root git config --global advice.detachedHead false \
- && HOME=/root git config --global http.postBuffer 524288000 \
- && HOME=/root git config --global pack.windowMemory "4096m" \
  && apt -y autoremove \
  && apt autoclean \
  && rm -rf /var/cache/apt/* *.zip \
  && npm install --global --upgrade yarn \
  && npm cache clean --force \
+ && HOME=/root git config --global user.name "Docker CI Bot" \
+ && HOME=/root git config --global user.email "ci-bot@docker.local" \
+ && HOME=/root git config --global advice.detachedHead false \
+ && HOME=/root git config --global http.postBuffer 524288000 \
+ && HOME=/root git config --global pack.windowMemory "4096m" \
  && echo 'alias ll="ls -alF"' >> /root/.bashrc \
  && ln -sf /proc/1/fd/1 /var/log/docker.log
 
