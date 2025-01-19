@@ -11,23 +11,49 @@ set -eo pipefail
 . "${build_path}"/initialize_"${android_platform}".sh
 
 # Device Build
-devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
+devices=$(printf %s "${device_list}" | sed -e "s/[[:punct:]]\+/ /g")
 echo "INFO: Device list: ${devices}"
 for device in ${devices}
 do
-  echo "INFO: Building CalyxOS-${android_version_number} for ${device}"
   export device
 
-  # Sync COS repo
-  clean_repo
+  # Set OS Major Version
+  if grep -q "${device}" <<< "rhode hawao devon axolotl FP4 FP5 blueline crosshatch sargo bonito flame coral sunfish barbet bramble redfin"
+  then
+    export calyx_version_major="5"
+  elif grep -q "${device}" <<< "oriole raven bluejay panther cheetah lynx tangorpro felix akita husky shiba caiman comet komodo tokay"
+  then
+    export calyx_version_major="6"
+  else
+    echo "FATAL: Device ${device} not supported by CalyxOS" && usage
+  fi
+
+  echo "INFO: Building CalyxOS-${android_version_number} for ${device}"
+
+  # Reset COS repo
   [[ -f /.dockerenv ]] && repo_safe_dir
-  repo init -u https://gitlab.com/CalyxOS/platform_manifest -b android"${android_version_number}" --git-lfs
+  clean_repo
+
+  # Set Variables
+  export device_out="${out_dir}"/"${device}"/"${build_date}"
+  export otatools_dir="${android_top}"/out/host/linux-x86
+  export latest_tag_cmd="https://gitlab.com/api/v4/projects/8459465/repository/tags \
+                         | jq -r '[.[] | select(.name | match(\"^${calyx_version_major}.\")).name][0]'"
+  export BUILD_NUMBER="${variant}.signed.${build_date}"
+  export RELAX_USES_LIBRARY_CHECK="true"
+
+  # Sync CalyxOS repo
+  repo_init_ref
+  if [[ "${manifest_tag}" =~ ^${calyx_version_major}. ]]
+  then
+    repo init -u https://gitlab.com/CalyxOS/platform_manifest -b refs/tags/"${manifest_tag}" --git-lfs
+  else
+    repo init -u https://gitlab.com/CalyxOS/platform_manifest -b "${manifest_tag}" --git-lfs
+  fi
+  [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
 
   source build/envsetup.sh
-  export BUILD_NUMBER="${variant}.signed.${build_date}"
-  export device_out="${out_dir}"/"${device}"/"${build_date}"
-  export otatools_dir="${android_top}"/out/host/linux-x86
 
   # Get vendor image
   build_id=$(grep build_id calyx/scripts/vars/"${device}" | cut -d\" -f2)
@@ -53,19 +79,6 @@ do
     fi
   fi
 
-  # Build microG
-  cd external/microg/GmsCore
-  git fetch --tags --all --force
-  ((xmx = $(free -m | grep Mem | awk '{print $4}')/2))
-  export JAVA_OPTS="-Xmx${xmx}m"
-  echo "mapbox.key=${mapbox_key}" > local.properties
-  gradle build --no-daemon
-  mv play-services-core-withMapbox-withNearby-release-unsigned.apk "${android_top}"/prebuilts/calyx/microg/GmsCore/GmsCore.apk
-  cd "${android_top}"
-
-  # Build Chromium
-  # TODO: reuse vanadium script
-
   # Build OS
   echo "INFO: Breakfast combo: ${combo}"
   breakfast ${combo}
@@ -73,6 +86,7 @@ do
   # Create outfile directory
   [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
   mkdir -p "${device_out}" 2>/dev/null || true
+ 
   print_env
 
   if [[ "${sign_build}" == "1" ]]
@@ -108,10 +122,12 @@ do
     m target-files-package
 
     # Sign and Release build
+    ln -s "${android_top}"/build "${otatools_dir}"/build
     cp -f "${OUT}"/obj/PACKAGING/target_files_intermediates/calyx_"${device}"-target_files*.zip "${otatools_dir}"
     cd "${otatools_dir}"
     bash "${android_top}"/vendor/calyx/scripts/release.sh "${device}" calyx_"${device}"-target_files*.zip
     python "${android_top}"/vendor/calyx/scripts/generate_metadata.py out/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-ota_update-"${BUILD_NUMBER}".zip
+    mv "${device}"-testing out/release-"${device}"-"${BUILD_NUMBER}"
     mv -f out/release-"${device}"-"${BUILD_NUMBER}" "${device_out}"
     cd "${android_top}"
   else

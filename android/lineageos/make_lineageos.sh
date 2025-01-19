@@ -46,10 +46,11 @@ do
   mkdir -p "${out_dir}"/"${device}"/"${build_date}" 2>/dev/null || true
 
   # Sync LOS repo
-  clean_repo
   [[ -f /.dockerenv ]] && repo_safe_dir
+  clean_repo
   repo init -u https://github.com/LineageOS/android.git -b lineage-"${android_version_number}" --git-lfs
   [[ "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
+  [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
   source build/envsetup.sh
 

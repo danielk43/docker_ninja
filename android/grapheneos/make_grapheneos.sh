@@ -83,29 +83,17 @@ do
     ln -s "${device_keys}" "${android_top}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys failed"
   fi
 
-  # Determine ref to build on
-  if [[ "${grapheneos_tag,,}" == "latest" && -z "${grapheneos_latest_tag}" ]]
-  then
-    grapheneos_latest_tag=$(curl -sL https://grapheneos.org/releases | xmllint --html --xpath "/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()" - 2> /dev/null)
-    grapheneos_tag=${grapheneos_latest_tag}
-  fi
-  if [[ "${grapheneos_tag}" =~ ^[[:digit:]]{10}$ ]]
-  then
-    echo "INFO: GrapheneOS tag set to \"${grapheneos_tag}\""
-  elif [[ "${grapheneos_tag}" =~ ^dev$|^development$|^$ ]]
-  then
-    grapheneos_tag=dev
-    echo "INFO: building on GrapheneOS development branch"
-  else
-    echo "FATAL: GrapheneOS tag: \"${grapheneos_tag}\" does not match expected format" && usage
-  fi
-
-  # Sync GrapheneOS repo
+  # Reset GOS repo
   [[ -f /.dockerenv ]] && repo_safe_dir
   clean_repo
-  if [[ "${grapheneos_tag}" != "dev" ]]
+
+  # Sync GrapheneOS repo
+  export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
+                        '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
+  repo_init_ref
+  if [[ "${manifest_tag}" != "${android_version_number}" ]]
   then
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${grapheneos_tag}"
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${manifest_tag}"
     mkdir ~/.ssh 2>/dev/null || true
     curl -sL https://grapheneos.org/allowed_signers -o ~/.ssh/grapheneos_allowed_signers
     cd .repo/manifests
@@ -127,6 +115,7 @@ do
   else
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"
   fi
+  [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
   source build/envsetup.sh > /dev/null
 

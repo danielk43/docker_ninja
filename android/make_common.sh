@@ -16,25 +16,30 @@ ccache_init() {
   ccache -o compression=true
 }
 
-repo_safe_dir() {
-  # Allow existing repo to work in container (will change some ownership to root)
-  git config --global --add safe.directory "${PWD}/.repo/manifests"
-  git config --global --add safe.directory "${PWD}/.repo/repo"
-  if repo list 2>/dev/null
+git_reset_clean() {
+  for cmd in am cherry-pick merge rebase revert
+  do
+    git $cmd --abort 2>/dev/null || true
+  done
+  git add --all
+  git reset --hard
+  if git remote -v | grep -i "chromium/src" > /dev/null
   then
-    for path in $(repo list -fp); do git config --global --add safe.directory "${path}"; done
+    git clean -ffdx
+  else
+    git clean -ffd
   fi
 }
 
 clean_repo() {
   rm -rf ./out ./releases ./*.zip
   find . -type f -name "index.lock" -delete
+  repo forall -c bash -c "git_reset_clean" &>/dev/null || true
 }
 
 sync_repo() {
   cd .repo/repo && git pull --force
   cd - >/dev/null
-  repo forall -c bash -c "git_reset_clean" &>/dev/null || true
   n=0 r="${retries}"
   set +e
   until [[ "${n}" -gt "${r}" ]]
@@ -49,19 +54,33 @@ sync_repo() {
   set -e
 }
 
-git_reset_clean() {
-  for cmd in am cherry-pick merge rebase revert
+repo_safe_dir() {
+  # Allow existing repo to work in container (will change some ownership to root)
+  git config --global --add safe.directory "${PWD}/.repo/manifests"
+  git config --global --add safe.directory "${PWD}/.repo/repo"
+  for path in $(cat .repo/project.list)
   do
-    git $cmd --abort 2>/dev/null || true
+    git config --global --add safe.directory "${PWD}"/"${path}"
   done
-  git add --all
-  git reset --hard
-  if git remote -v | grep -i "chromium/src" > /dev/null
+}
+
+repo_init_ref() {
+  if [[ "${manifest_tag,,}" == "latest" && -z "${manifest_latest_tag}" ]]
   then
-    git clean -ffdx
-  else
-    git clean -ffd
+    manifest_latest_tag="$(eval "curl -sL ${latest_tag_cmd}")"
+    manifest_tag=${manifest_latest_tag}
   fi
+  if [[ ! "${manifest_tag}" =~ (^[[:digit:]]{8,10}$|^${calyxos_version_major}.|^dev|^$) ]]
+  then
+    echo "FATAL: Manifest tag: \"${manifest_tag}\" does not match expected format" && usage
+  fi
+  if [[ "${manifest_tag}" =~ ^dev|^$ ]]
+  then
+    manifest_tag=$([[ "${android_platform}" =~ "calyxos" ]] \
+                   && printf "android${android_version_number%.*}\n" \
+                   || printf "${android_version_number%.*}\n")
+  fi
+  echo "INFO: Building ${android_platform^} on ref: \"${manifest_tag}\""
 }
 
 print_env() {
@@ -82,6 +101,7 @@ export sign_build=0
 export sync_jobs=$(nproc)
 export variant="userdebug"
 export yarn=0
+export manifest_tag="dev"
 export mapbox_key="apikey"
 [[ -n "${env_vars}" ]] && export "${env_vars?}"
 
@@ -106,7 +126,7 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:z:hilrswy" opt; do
     q) export chromium_dname="$OPTARG" ;;
     r) roomservice=1 ;;
     s) sign_build=1 ;;
-    t) grapheneos_tag="$OPTARG" ;;
+    t) manifest_tag="$OPTARG" ;;
     u) user_scripts="$OPTARG" ;;
     v) android_version="$OPTARG" ;;
     w) print_env=1 ;;
@@ -130,8 +150,7 @@ shift $((OPTIND-1))
 [[ -n "${DNAME_ANDROID}" ]] && export android_dname=${DNAME_ANDROID}
 [[ -n "${DNAME_CHROMIUM}" ]] && export chromium_dname=${DNAME_CHROMIUM}
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
-[[ -n "${GRAPHENEOS_TAG}" ]] && export grapheneos_tag=${GRAPHENEOS_TAG}
-[[ -n "${MAPBOX_KEY}" ]] && export mapbox_key=${MAPBOX_KEY} || export mapbox_key="apikey"
+[[ -n "${MANIFEST_TAG}" ]] && export manifest_tag=${MANIFEST_TAG}
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}

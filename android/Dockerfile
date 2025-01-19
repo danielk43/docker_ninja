@@ -11,8 +11,7 @@ ENV CCACHE_COMPRESSLEVEL=1
 ENV CCACHE_DIR=$HOME/ccache
 ENV CCACHE_EXEC=/usr/bin/ccache
 ENV CCACHE_SIZE=50G
-ENV GRADLE_HOME=/opt/gradle
-ENV PATH="$HOME/depot_tools:$HOME/platform-tools:$GRADLE_HOME/bin:$PATH"
+ENV PATH="$HOME/depot_tools:$HOME/platform-tools:$PATH"
 ENV REBASELINE_PROGUARD=1
 
 ENV ANDROID_VERSION=""
@@ -54,15 +53,17 @@ RUN apt update \
     libelf-dev libgcc-s1 libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev \
     libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs openjdk-17-jdk openssh-server pngcrush \
     python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
- && curl -LO https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip \
- && unzip commandlinetools-linux-*.zip \
- && yes 'y' | cmdline-tools/bin/sdkmanager --licenses --sdk_root=$ANDROID_HOME \
- && curl -LO https://services.gradle.org/distributions/gradle-"$(curl -sL https://gradle.org/releases \
-  | xmllint --html --xpath "/html/body/div[2]/div/main/div/h3[1]/span[2]/text()" - | tr -d v)"-bin.zip \
- && unzip -d $(dirname "${GRADLE_HOME}") gradle-*.zip \
- && mv "${GRADLE_HOME}"-* "${GRADLE_HOME}" \
- && printf "org.gradle.daemon=false\norg.gradle.welcome=never" >> "${GRADLE_HOME}"/gradle.properties \
- && pip3 install --break-system-packages --no-cache-dir protobuf \
+ && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
+ && unzip platform-tools-latest-linux.zip \
+ && rm -f platform-tools-latest-linux.zip \
+ && curl -L https://storage.googleapis.com/git-repo-downloads/repo -o /usr/local/bin/repo \
+ && chmod a+x /usr/local/bin/repo \
+ && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
+ && curl -LO $(curl -s https://api.github.com/repos/protocolbuffers/protobuf/releases/latest \
+  | grep "browser_download_url.*linux-x86_64.zip" | cut -d\" -f4) \
+ && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
+ && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
+ && pip3 install --break-system-packages --no-cache-dir lxml protobuf pyyaml \
  && HOME=/root git config --global user.name "Docker CI Bot" \
  && HOME=/root git config --global user.email "ci-bot@docker.local" \
  && HOME=/root git config --global advice.detachedHead false \
