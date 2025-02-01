@@ -3,6 +3,7 @@
 # shellcheck disable=SC2015
 # shellcheck disable=SC2046
 # shellcheck disable=SC2086
+# shellcheck disable=SC2154
 # shellcheck disable=SC2206
 # shellcheck source=/dev/null
 

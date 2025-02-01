@@ -3,6 +3,11 @@
 # TODO: Long / better opts
 # TODO: Optional avb
 
+# shellcheck disable=SC2015
+# shellcheck disable=SC2154
+# shellcheck disable=SC2206
+# shellcheck source=/dev/null
+
 apply_user_scripts() {
   user_scripts_arr=( $user_scripts )
   for user_script in "${user_scripts_arr[@]}"
@@ -58,10 +63,10 @@ repo_safe_dir() {
   # Allow existing repo to work in container (will change some ownership to root)
   git config --global --add safe.directory "${PWD}/.repo/manifests"
   git config --global --add safe.directory "${PWD}/.repo/repo"
-  for path in $(cat .repo/project.list)
+  while read -r path
   do
     git config --global --add safe.directory "${PWD}"/"${path}"
-  done
+  done < .repo/project.list
 }
 
 repo_init_ref() {
@@ -78,12 +83,17 @@ repo_init_ref() {
 }
 
 print_env() {
-  export epoch=$(printf "%.0f" $EPOCHREALTIME)
+  epoch=$(printf "%.0f" $EPOCHREALTIME)
+  export epoch
   [[ "${PRINT_ENV}" == "true" ]] && env | sort > "${device_out}"/"${device}"-"${epoch}".env || true
 }
 
+build_date=$(TZ=UTC date +%Y%m%d)
+sync_jobs=$(nproc)
+export build_date
+export sync_jobs
+
 export -f git_reset_clean
-export build_date=$(TZ=UTC date +%Y%m%d)
 export android_dname="/CN=Android/"
 export chromium_dname="CN=Chromium"
 export ccache_size=50G
@@ -92,11 +102,11 @@ export print_env=0
 export retries=5
 export roomservice=0
 export sign_build=0
-export sync_jobs=$(nproc)
 export variant="userdebug"
 export yarn=0
 export manifest_tag="dev"
 export mapbox_key="apikey"
+
 [[ -n "${env_vars}" ]] && export "${env_vars?}"
 
 while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:z:hilrswy" opt; do

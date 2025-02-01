@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# shellcheck disable=SC2154
+# shellcheck source=/dev/null
+
 usage() {
   echo "Usage:"
   echo "  ./build_lineageos.sh [ options ]"
