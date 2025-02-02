@@ -70,16 +70,16 @@ repo_safe_dir() {
 }
 
 repo_init_ref() {
-  if [[ "${manifest_tag,,}" == "latest" && -z "${manifest_latest_tag}" ]]
+  if [[ "${release_tag,,}" == "latest" && -z "${release_latest_tag}" ]]
   then
-    manifest_latest_tag="$(eval "curl -sL ${latest_tag_cmd}")"
-    manifest_tag=${manifest_latest_tag}
+    release_latest_tag="$(eval "curl -sL ${latest_tag_cmd}")"
+    release_tag=${release_latest_tag}
   fi
-  if [[ ! "${manifest_tag}" =~ (^[[:digit:]]{8,10}$|^${calyxos_version_major}.|^dev|^$) ]]
+  if [[ ! "${release_tag}" =~ (^[[:digit:]]{8,10}$|^${calyxos_version_major}.|^dev|^$) ]]
   then
-    echo "FATAL: Manifest tag: \"${manifest_tag}\" does not match expected format" && usage
+    echo "FATAL: Manifest tag: \"${release_tag}\" does not match expected format" && usage
   fi
-  echo "INFO: Building ${android_platform^} on ref: \"${manifest_tag}\""
+  echo "INFO: Building ${android_platform^} on ref: \"${release_tag}\""
 }
 
 print_env() {
@@ -104,8 +104,7 @@ export roomservice=0
 export sign_build=0
 export variant="userdebug"
 export yarn=0
-export manifest_tag="dev"
-export mapbox_key="apikey"
+export release_tag="dev"
 
 [[ -n "${env_vars}" ]] && export "${env_vars?}"
 
@@ -130,7 +129,7 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:z:hilrswy" opt; do
     q) export chromium_dname="$OPTARG" ;;
     r) roomservice=1 ;;
     s) sign_build=1 ;;
-    t) manifest_tag="$OPTARG" ;;
+    t) release_tag="$OPTARG" ;;
     u) user_scripts="$OPTARG" ;;
     v) android_version="$OPTARG" ;;
     w) print_env=1 ;;
@@ -154,7 +153,7 @@ shift $((OPTIND-1))
 [[ -n "${DNAME_ANDROID}" ]] && export android_dname=${DNAME_ANDROID}
 [[ -n "${DNAME_CHROMIUM}" ]] && export chromium_dname=${DNAME_CHROMIUM}
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
-[[ -n "${MANIFEST_TAG}" ]] && export manifest_tag=${MANIFEST_TAG}
+[[ -n "${RELEASE_TAG}" ]] && export release_tag=${RELEASE_TAG}
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}

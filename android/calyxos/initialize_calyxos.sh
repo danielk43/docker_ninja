@@ -23,6 +23,7 @@ usage() {
   echo "    -p number of retries for rePo sync if errors encountered (defaults to 7)"
   echo "    -q Chromium keys distinguished name (defaults to \"/CN=Chromium/\")"
   echo "    -s Sign build (keys will be auto-generated, see https://calyxos.org/docs/development/build/sign)"
+  echo "    -t calyxos release Tag (or \"latest\" for latest stable, omit or \"dev\" for development)"
   echo "    -u space-separated paths to User scripts (\"/path/to/user.sh /path/to/patch.sh ...\")"
   echo "    -v android Version (in format \"calyxos-xx\")"
   echo "    -w Write environment to stdout"

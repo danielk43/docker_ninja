@@ -13,7 +13,7 @@ docker run --rm \
 -e "CCACHE_SIZE=100G" \
 -e "CLEAN_REPO=false" \
 -e "DEVICES=lynx akita" \
--e "MANIFEST_TAG=dev" \
+-e "RELEASE_TAG=dev" \
 -e "KEYS_PASSWORD_LYNX=${KEYS_PASSWORD_LYNX}" \
 -e "KEYS_PASSWORD_AKITA=${KEYS_PASSWORD_AKITA}" \
 -e "VANADIUM_PASSWORD=${VANADIUM_PASSWORD}" \
@@ -35,7 +35,7 @@ docker run --rm \
 -e "CCACHE_SIZE=100G" \
 -e "CLEAN_REPO=false" \
 -e "DEVICES=shiba" \
--e "MANIFEST_TAG=latest" \
+-e "RELEASE_TAG=latest" \
 -e "SIGN_BUILD=true" \
 -v "/path/to/.ccache:/android_build/ccache" \
 -v "/path/to/calyxos/keys:/android_build/keys" \

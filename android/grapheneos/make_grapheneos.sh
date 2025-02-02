@@ -89,10 +89,10 @@ do
   export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
                         '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
   repo_init_ref
-  [[ "${manifest_tag}" =~ ^dev|^$ ]] && manifest_tag="${android_version_number%.*}"
-  if [[ "${manifest_tag}" != "${android_version_number}" ]]
+  [[ "${release_tag}" =~ ^dev|^$ ]] && release_tag="${android_version_number%.*}"
+  if [[ "${release_tag}" != "${android_version_number}" ]]
   then
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${manifest_tag}"
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${release_tag}"
     mkdir ~/.ssh 2>/dev/null || true
     curl -sL https://grapheneos.org/allowed_signers -o ~/.ssh/grapheneos_allowed_signers
     cd .repo/manifests

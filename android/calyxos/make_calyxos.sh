@@ -44,12 +44,12 @@ do
 
   # Sync CalyxOS repo
   repo_init_ref
-  [[ "${manifest_tag}" =~ ^dev|^$ ]] && manifest_tag="android${android_version_number%.*}"
-  if [[ "${manifest_tag}" =~ ^${calyx_version_major}. ]]
+  [[ "${release_tag}" =~ ^dev|^$ ]] && release_tag="android${android_version_number%.*}"
+  if [[ "${release_tag}" =~ ^${calyx_version_major}. ]]
   then
-    repo init -u https://gitlab.com/CalyxOS/platform_manifest -b refs/tags/"${manifest_tag}" --git-lfs
+    repo init -u https://gitlab.com/CalyxOS/platform_manifest -b refs/tags/"${release_tag}" --git-lfs
   else
-    repo init -u https://gitlab.com/CalyxOS/platform_manifest -b "${manifest_tag}" --git-lfs
+    repo init -u https://gitlab.com/CalyxOS/platform_manifest -b "${release_tag}" --git-lfs
   fi
   [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
