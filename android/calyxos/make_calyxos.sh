@@ -56,12 +56,8 @@ do
   source build/envsetup.sh
 
   # Get vendor image
-  build_id=$(grep build_id calyx/scripts/vars/"${device}" | cut -d\" -f2)
-  if ! grep -q "${build_id}" vendor/google/"${device}"/build_id.txt 2>/dev/null
-  then
-    calyx/scripts/pixel/device.sh "${device}"
-  fi
-  combo="${device} ${variant}"
+  rm -rf vendor/google/"${device}"
+  calyx/scripts/pixel/device.sh "${device}"
 
   # Apply User Scripts
   [[ -n "${user_scripts}" ]] && apply_user_scripts
@@ -80,6 +76,7 @@ do
   fi
 
   # Build OS
+  combo="${device} ${variant}"
   echo "INFO: Breakfast combo: ${combo}"
   breakfast ${combo}
 
