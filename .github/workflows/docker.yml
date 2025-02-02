@@ -9,7 +9,7 @@ on:
 env:
   REGISTRY: docker.io
   # github.repository as <account>/<repo>
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_OWNER: ${{ github.repository_owner }}
 
 jobs:
   build:
@@ -38,7 +38,7 @@ jobs:
         id: meta-android
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_android
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/ninja_android
           tags: |
             type=raw,value=latest,enable=true
 
@@ -56,7 +56,7 @@ jobs:
         id: meta-cmake
         uses: docker/metadata-action@369eb591f429131d6889c46b94e711f089e6ca96
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}_cmake
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_OWNER }}/ninja_cmake
           tags: |
             type=raw,value=latest,enable=true
 

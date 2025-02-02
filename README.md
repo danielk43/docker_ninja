@@ -24,7 +24,7 @@ docker run --rm \
 -v "/path/to/android/grapheneos/ROMs:/android_build/out" \
 -v "/path/to/src:/android_build/src" \
 -v "/path/to/vanadium:/android_build/chromium" \
-danielk43/docker_ninja_android:latest
+danielk43/ninja_android:latest
 ```
 
 CalyxOS example
@@ -43,7 +43,7 @@ docker run --rm \
 -v "/path/to/userscripts:/android_build/scripts" \
 -v "/path/to/src/vendor/factory_images:/tmp/pixel" \
 -v "/path/to/src:/android_build/src" \
-danielk43/docker_ninja_android:latest
+danielk43/ninja_android:latest
 ```
 
 LineageOS example
@@ -65,7 +65,7 @@ docker run --rm \
 -v "/path/to/android/lineageos/ROMs:/android_build/out" \
 -v "/path/to/userscripts:/android_build/scripts" \
 -v "/path/to/src:/android_build/src" \
-danielk43/docker_ninja_android:latest
+danielk43/ninja_android:latest
 ```
 
 ### Standalone / Host
