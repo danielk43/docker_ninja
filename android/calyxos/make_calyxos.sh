@@ -18,7 +18,7 @@ for device in ${devices}
 do
   export device
 
-  # Set OS Major Version
+  # Set OS Major Version  # https://calyxos.org/install
   if grep -q "${device}" <<< "rhode hawao devon axolotl FP4 FP5 blueline crosshatch sargo bonito flame coral sunfish barbet bramble redfin"
   then
     export calyx_version_major="5"
