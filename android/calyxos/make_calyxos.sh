@@ -56,7 +56,7 @@ do
   source build/envsetup.sh
 
   # Get vendor image
-  rm -rf vendor/google/"${device}"
+  rm -rf vendor/google/*
   calyx/scripts/pixel/device.sh "${device}"
 
   # Apply User Scripts
