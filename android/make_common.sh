@@ -108,7 +108,7 @@ export release_tag="dev"
 
 [[ -n "${env_vars}" ]] && export "${env_vars?}"
 
-while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:z:hilrswy" opt; do
+while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:hilrswy" opt; do
   case $opt in
     a) export android_top="$OPTARG" ;;
     b) build_type="$OPTARG" ;;
@@ -135,7 +135,6 @@ while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:z:hilrswy" opt; do
     w) print_env=1 ;;
     x) chromium_dir="$OPTARG" ;;
     y) yarn=1 ;;
-    z) mapbox_key="$OPTARG" ;;
     :) echo -e "FATAL: Option -$OPTARG requires an argument\n"
        usage ;;
     \?) echo -e "FATAL: Invalid option:-$OPTARG\n"

@@ -27,7 +27,6 @@ usage() {
   echo "    -u space-separated paths to User scripts (\"/path/to/user.sh /path/to/patch.sh ...\")"
   echo "    -v android Version (in format \"calyxos-xx\")"
   echo "    -w Write environment to stdout"
-  echo "    -z mapbox api key"
   echo
   echo "  Example:"
   echo "    ./build_android.sh -a \$CALYXOS_TOP -d \"barbet lynx\" -f user \\"
