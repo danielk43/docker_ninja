@@ -55,8 +55,6 @@ do
   sync_repo
   source build/envsetup.sh
 
-  android_platform
-
   # Get vendor image
   rm -rf vendor/google/*
   calyx/scripts/pixel/device.sh "${device}"

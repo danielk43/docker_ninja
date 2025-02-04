@@ -51,7 +51,6 @@ do
   [[ "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
   [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
-  android_platform
   source build/envsetup.sh
 
   (( ${android_version_number%%.*} < 19 )) && echo "FATAL: Only LineageOS 19 or higher supported" && usage
