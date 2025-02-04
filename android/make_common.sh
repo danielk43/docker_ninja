@@ -82,6 +82,37 @@ repo_init_ref() {
   echo "INFO: Building ${android_platform^} on ref: \"${release_tag}\""
 }
 
+# If android_version is not set, try to calculate platform and version
+android_platform() {
+  cd "${android_top}"
+  if [[ -n "${android_version}" ]]
+  then
+    android_platform=${android_version%%-*}
+    android_version_number=${android_version##*-}
+  elif [[ -d .repo ]]
+  then
+    for os in lineageos calyxos grapheneos
+    do
+      if grep -q "${os}" .repo/manifests/default.xml
+      then
+        android_platform=${os}
+      fi
+    done
+    android_version_number=$(grep refs/heads .repo/manifests/default.xml | cut -d\" -f2 | cut -d/ -f3 | cut -d- -f2 | tr -d "[:alpha:]" | uniq || true)
+    if [[ -z "${android_version_number}" ]]
+    then
+      android_version_number=$(grep 'revision="refs/tags/android-' .repo/manifests/default.xml | cut -d- -f2 | cut -d. -f1 || true)
+    fi
+  fi
+
+  [[ -z "${android_platform}" ]] && echo "FATAL: Android platform not found" && exit 1
+  [[ ! "${android_version_number}" =~ ^[[:digit:]]{1,2}?.[[:digit:]]$ ]] && echo "FATAL: Could not determine Android version number" && exit 1
+
+  export android_platform=${android_platform,,}
+  export android_version_number ANDROID_VERSION=${android_version_number}
+  export build_path="${BUILD_HOME}"/android/"${android_platform}"
+}
+
 print_env() {
   epoch=$(printf "%.0f" $EPOCHREALTIME)
   export epoch
@@ -184,34 +215,6 @@ export BUILD_HOME="${PWD}"
 # Update depot tools
 cd depot_tools && git pull || true
 
-# If android_version is not set, try to calculate platform and version
-cd "${android_top}"
-if [[ -n "${android_version}" ]]
-then
-  android_platform=${android_version%%-*}
-  android_version_number=${android_version##*-}
-elif [[ -d .repo ]]
-then
-  for os in lineageos calyxos grapheneos
-  do
-    if grep -q "${os}" .repo/manifests/default.xml
-    then
-      android_platform=${os}
-    fi
-  done
-  android_version_number=$(grep refs/heads .repo/manifests/default.xml | cut -d\" -f2 | cut -d/ -f3 | cut -d- -f2 | tr -d "[:alpha:]" | uniq || true)
-  if [[ -z "${android_version_number}" ]]
-  then
-    android_version_number=$(grep 'revision="refs/tags/android-' .repo/manifests/default.xml | cut -d- -f2 | cut -d. -f1 || true)
-  fi
-fi
-
-[[ -z "${android_platform}" ]] && echo "FATAL: Supported Android platform not found" && exit 1
-[[ ! "${android_version_number}" =~ ^[[:digit:]]{1,2}?.[[:digit:]]$ ]] && echo "FATAL: Could not determine Android version number" && exit 1
-
-export android_platform=${android_platform,,}
-export android_version_number ANDROID_VERSION=${android_version_number}
-export build_path="${BUILD_HOME}"/android/"${android_platform}"
 export AVB_TOOL="${android_top}/external/avb/avbtool.py"
 export MAKE_KEY="${android_top}/development/tools/make_key"
 

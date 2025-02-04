@@ -89,8 +89,7 @@ do
   export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
                         '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
   repo_init_ref
-  [[ "${release_tag}" =~ ^dev|^$ ]] && release_tag="${android_version_number%.*}"
-  if [[ "${release_tag}" != "${android_version_number}" ]]
+  if [[ ! "${release_tag}" =~ ^((1(3|4|5)|dev)|)$ ]]
   then
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${release_tag}"
     mkdir ~/.ssh 2>/dev/null || true
@@ -99,23 +98,24 @@ do
     git config gpg.ssh.allowedSignersFile ~/.ssh/grapheneos_allowed_signers
     git verify-tag "$(git describe)" || (echo "FATAL: GrapheneOS tag verification failed" && exit 1)
     cd - > /dev/null
-  elif grep -q "${device}" <<< "comet komodo caiman tokay"
-  then
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"
-  elif grep -q "${device}" <<< "redfin bramble"
-  then
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"-redfin
   elif grep -q "${device}" <<< "coral flame"
   then
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"-coral
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 13-coral
   elif grep -q "${device}" <<< "sunfish"
   then
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 13
+  elif grep -q "${device}" <<< "redfin bramble"
+  then
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 14-redfin
+  elif grep -q "${device}" <<< "barbet"
+  then
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 14
   else
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b "${android_version_number}"
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 15
   fi
   [[ -f /.dockerenv ]] && repo_safe_dir
   sync_repo
+  android_platform
   source build/envsetup.sh >/dev/null
 
   [[ -n "${grapheneos_latest_tag}" ]] && export BUILD_NUMBER=${grapheneos_tag}
