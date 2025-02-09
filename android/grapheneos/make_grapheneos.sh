@@ -118,7 +118,7 @@ do
   sync_repo
   source build/envsetup.sh >/dev/null
 
-  [[ -n "${grapheneos_latest_tag}" ]] && export BUILD_NUMBER=${grapheneos_tag}
+  [[ -n "${release_latest_tag}" ]] && export BUILD_NUMBER=${release_tag}
   echo "BUILD_DATETIME=${BUILD_DATETIME} BUILD_NUMBER=${BUILD_NUMBER}"
 
   if [[ -d "${chromium_dir}/src/out/Default/apks/release" ]]
@@ -273,7 +273,7 @@ done
 # Deep clean android and chromium src
 [[ "${clean_repo}" == "1" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${android_top}"
 [[ "${clean_repo}" == "1" && -d "${chromium_dir}/.git" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${chromium_dir}"
-[[ "${clean_repo}" == "1" && -d "${chromium_dir}/src" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cgx -d "${chromium_dir}/src"
+[[ "${clean_repo}" == "1" && -d "${chromium_dir}/src/.git" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cgx -d "${chromium_dir}/src"
 
 exit 0
 
