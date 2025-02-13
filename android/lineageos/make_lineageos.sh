@@ -86,7 +86,6 @@ do
     m target-files-package otatools
 
     # Sign build
-    [[ -n "${ANDROID_PW_FILE}" ]] && echo "INFO: ANDROID_PW_FILE=${ANDROID_PW_FILE}"
     sign_target_files_apks -o -d "${device_keys}" $(extra_apks_args) \
     "${OUT}"/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip signed-target_files.zip
 
