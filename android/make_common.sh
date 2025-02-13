@@ -97,12 +97,12 @@ export android_dname="/CN=Android/"
 export chromium_dname="CN=Chromium"
 export ccache_size=50G
 export clean_repo=0
+export persist_vendor=0
 export print_env=0
 export retries=5
 export roomservice=0
 export sign_build=0
 export variant="userdebug"
-export yarn=0
 export release_tag="dev"
 
 # Add environment
@@ -119,10 +119,10 @@ export release_tag="dev"
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}
 [[ -n "${DELETE_ROOMSERVICE}" && "${DELETE_ROOMSERVICE}" != "false" ]] && export roomservice=1
+[[ -n "${PERSIST_VENDOR}" && "${PERSIST_VENDOR}" != "false" ]] && export persist_vendor=1
 [[ -n "${CLEAN_REPO}" && "${CLEAN_REPO}" != "false" ]] && export clean_repo=1
 [[ -n "${SIGN_BUILD}" && "${SIGN_BUILD}" != "false" ]] && export sign_build=1
 [[ -n "${PRINT_ENV}" && "${PRINT_ENV}" != "false" ]] && export print_env=1
-[[ -n "${YARN}" && "${YARN}" != "false" ]] && export yarn=1
 
 export android_top=/android_build/src
 export keys_dir=/android_build/keys

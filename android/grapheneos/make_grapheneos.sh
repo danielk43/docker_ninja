@@ -188,7 +188,7 @@ do
   cd "${android_top}"
 
   # Extract vendor files
-  if [[ "${yarn}" == "1" ]]
+  if [[ "${persist_vendor}" == "0" ]]
   then
     echo "INFO: Extracting vendor files"
     rm -rf vendor/adevtool/node_modules

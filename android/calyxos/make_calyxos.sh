@@ -54,8 +54,11 @@ do
   source build/envsetup.sh
 
   # Get vendor image
-  rm -rf vendor/google/*
-  calyx/scripts/pixel/device.sh "${device}"
+  if [[ "$persist_vendor" == "0" ]]
+  then
+    rm -rf vendor/google/*
+    calyx/scripts/pixel/device.sh "${device}"
+  fi
 
   # Apply User Scripts
   [[ -n "${user_scripts}" ]] && apply_user_scripts

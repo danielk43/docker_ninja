@@ -60,7 +60,7 @@ docker run --rm \
 -v "/path/to/calyxos/keys:/android_build/keys" \
 -v "/path/to/calyxos/ROMs:/android_build/out" \
 -v "/path/to/userscripts:/android_build/scripts" \
--v "/path/to/src/vendor/factory_images:/tmp/pixel" \
+-v "/path/to/src/vendor/factory_images:/tmp/pixel" \ # Cache vendor images (Optional)
 -v "/path/to/src:/android_build/src" \
 danielk43/ninja_android:latest
 ```
