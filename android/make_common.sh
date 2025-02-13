@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: Long / better opts
 # TODO: Optional avb
 
 # shellcheck disable=SC2015
@@ -106,44 +105,7 @@ export variant="userdebug"
 export yarn=0
 export release_tag="dev"
 
-[[ -n "${env_vars}" ]] && export "${env_vars?}"
-
-while getopts ":a:b:c:d:e:f:g:j:k:m:n:o:p:q:t:u:v:x:hilrswy" opt; do
-  case $opt in
-    a) export android_top="$OPTARG" ;;
-    b) build_type="$OPTARG" ;;
-    c) ccache_size="$OPTARG" ;;
-    d) device_list="$OPTARG" ;;
-    e) env_vars="$OPTARG" ;;
-    f) variant="$OPTARG" ;;
-    g) export android_dname="$OPTARG" ;;
-    h) usage ;;
-    i) export OFFICIAL_BUILD=true ;;
-    j) sync_jobs="$OPTARG" ;;
-    k) export keys_dir="$OPTARG" ;;
-    l) clean_repo=1 ;;
-    m) gms_makefile="$OPTARG" ;;
-    n) kernel_dir="$OPTARG" ;;
-    o) out_dir="$OPTARG" ;;
-    p) retries="$OPTARG" ;;
-    q) export chromium_dname="$OPTARG" ;;
-    r) roomservice=1 ;;
-    s) sign_build=1 ;;
-    t) release_tag="$OPTARG" ;;
-    u) user_scripts="$OPTARG" ;;
-    v) android_version="$OPTARG" ;;
-    w) print_env=1 ;;
-    x) chromium_dir="$OPTARG" ;;
-    y) yarn=1 ;;
-    :) echo -e "FATAL: Option -$OPTARG requires an argument\n"
-       usage ;;
-    \?) echo -e "FATAL: Invalid option:-$OPTARG\n"
-       usage ;;
-  esac
-done
-shift $((OPTIND-1))
-
-# Add (Docker) environment if it exists
+# Add environment
 [[ -n "${ANDROID_VERSION}" ]] && export android_version=${ANDROID_VERSION}
 [[ -n "${BUILD_TYPE}" ]] && export build_type=${BUILD_TYPE}
 [[ -n "${BUILD_VARIANT}" ]] && export variant=${BUILD_VARIANT}
@@ -162,11 +124,11 @@ shift $((OPTIND-1))
 [[ -n "${PRINT_ENV}" && "${PRINT_ENV}" != "false" ]] && export print_env=1
 [[ -n "${YARN}" && "${YARN}" != "false" ]] && export yarn=1
 
-[[ -f /.dockerenv ]] && export android_top=/android_build/src
-[[ -f /.dockerenv ]] && export keys_dir=/android_build/keys
-[[ -f /.dockerenv ]] && export out_dir=/android_build/out
-[[ -f /.dockerenv ]] && export kernel_dir=/android_build/kernel
-[[ -f /.dockerenv ]] && export chromium_dir=/android_build/chromium
+export android_top=/android_build/src
+export keys_dir=/android_build/keys
+export out_dir=/android_build/out
+export kernel_dir=/android_build/kernel
+export chromium_dir=/android_build/chromium
 
 # Validations
 [[ -z "${device_list}" ]] && echo "FATAL: Device list (-d) or DEVICES is required" && exit 1

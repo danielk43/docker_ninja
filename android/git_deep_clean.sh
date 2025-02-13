@@ -70,7 +70,7 @@ prune_src() {
 
 # Allow existing repo to work in container (will change some ownership to root)
 repo_safe_dir() {
-  if [[ -d "./.git" && -f /.dockerenv ]]
+  if [[ -d "./.git" ]]
   then
     git config --global --add safe.directory "${PWD}"
     # shellcheck disable=SC2046
@@ -78,7 +78,7 @@ repo_safe_dir() {
     do
       git config --global --add safe.directory "${PWD}"/"${repository}"
     done
-  elif [[ -d "./.repo" && -f "/.dockerenv" ]]
+  elif [[ -d "./.repo" ]]
   then
     git config --global --add safe.directory "${PWD}/.repo/manifests"
     git config --global --add safe.directory "${PWD}/.repo/repo"

@@ -9,8 +9,6 @@
 
 set -eo pipefail
 
-. "${build_path}"/initialize_"${android_platform}".sh
-
 # Device Build
 devices=$(printf %s "${device_list}" | sed -e "s/[[:punct:]]\+/ /g")
 echo "INFO: Device list: ${devices}"
@@ -32,7 +30,7 @@ do
   echo "INFO: Building CalyxOS ${calyx_version_major} for ${device}"
 
   # Reset COS repo
-  [[ -f /.dockerenv ]] && repo_safe_dir
+  repo_safe_dir
   clean_repo
 
   # Set Variables
@@ -51,7 +49,7 @@ do
   else
     repo init -u https://gitlab.com/CalyxOS/platform_manifest -b "${release_tag}" --git-lfs
   fi
-  [[ -f /.dockerenv ]] && repo_safe_dir
+  repo_safe_dir
   sync_repo
   source build/envsetup.sh
 

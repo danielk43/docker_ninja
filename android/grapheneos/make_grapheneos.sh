@@ -6,7 +6,8 @@
 
 set -eo pipefail
 
-. "${build_path}"/initialize_"${android_platform}".sh
+# Initialize signing keys
+. "${build_path}"/"${android_platform}"_keys.sh
 
 # Build Vanadium once, outside of devices loop
 if [[ -n "${VANADIUM_PASSWORD}" && -d ${chromium_dir} ]]
@@ -14,7 +15,7 @@ then
   cd "${chromium_dir}"
   [[ -f "args.gn" ]] || git clone https://github.com/GrapheneOS/Vanadium.git .
   clean_repo
-  [[ -f /.dockerenv ]] && git config --global --add safe.directory "${chromium_dir}"
+  git config --global --add safe.directory "${chromium_dir}"
   git reset --hard && git clean -ffd
   git fetch --all --force --tags --prune --prune-tags
   git checkout main # TODO: add tags checkout functionality
@@ -33,11 +34,11 @@ then
 
   [[ ! -d src ]] && fetch --nohooks android
   cd src
-  [[ -f /.dockerenv ]] && git config --global --add safe.directory "${PWD}" \
-                       && for repository in $(dirname $(find . -type d -name .git -printf "%P\n"))
-                          do
-                            git config --global --add safe.directory "${PWD}"/"${repository}"
-                          done
+  git config --global --add safe.directory "${PWD}" \
+  && for repository in $(dirname $(find . -type d -name .git -printf "%P\n"))
+  do
+    git config --global --add safe.directory "${PWD}"/"${repository}"
+  done
   rm -rf .git/*-apply && git_reset_clean &> /dev/null
   git submodule foreach "git reset --hard; git clean -ffdx" &> /dev/null || true
   git fetch --all --force --tags --prune --prune-tags
@@ -82,7 +83,7 @@ do
   fi
 
   # Reset GOS repo
-  [[ -f /.dockerenv ]] && repo_safe_dir
+  repo_safe_dir
   clean_repo
 
   # Sync GrapheneOS repo
@@ -114,7 +115,7 @@ do
   else
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 15
   fi
-  [[ -f /.dockerenv ]] && repo_safe_dir
+  repo_safe_dir
   sync_repo
   source build/envsetup.sh >/dev/null
 
@@ -140,7 +141,7 @@ do
     grep -q "${device}" <<< "komodo caiman tokay" && device_family=caimoto || device_family=${device}
     mkdir "${device_family}" 2>/dev/null || true
     cd "${device_family}"
-    [[ -f /.dockerenv ]] && repo_safe_dir
+    repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"
     sync_repo
     ./build_"${device_family}".sh --config=no_download_gki --config=no_download_gki_fips140 --lto=full
@@ -151,7 +152,7 @@ do
     grep -q "${device}" <<< "husky shiba" && device_family=shusky || device_family=${device}
     mkdir "${device_family}" 2>/dev/null || true
     cd "${device_family}"
-    [[ -f /.dockerenv ]] && repo_safe_dir
+    repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-zuma.git -b "${android_version_number}"
     sync_repo
     ./build_"${device_family}".sh --config=no_download_gki --lto=full
@@ -170,7 +171,7 @@ do
     fi
     mkdir "${device_family}" 2>/dev/null || true
     cd "${device_family}"
-    [[ -f /.dockerenv ]] && repo_safe_dir
+    repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-gs.git -b "${android_version_number}"
     sync_repo
     if [[ ${device_family} == "pantah" ]]
