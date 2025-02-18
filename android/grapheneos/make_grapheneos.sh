@@ -138,28 +138,31 @@ do
   # 9th gen
   if grep -q "${device}" <<< "comet komodo caiman tokay"
   then
+    kernel=pixel
     grep -q "${device}" <<< "komodo caiman tokay" && device_family=caimoto || device_family=${device}
-    mkdir "${device_family}" 2>/dev/null || true
-    cd "${device_family}"
+    mkdir "${kernel}" 2>/dev/null || true
+    cd "${kernel}"
     repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-zumapro.git -b "${android_version_number}"
+    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15
     sync_repo
     ./build_"${device_family}".sh --config=no_download_gki --config=no_download_gki_fips140 --lto=full
     cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
   # 8th gen
   elif grep -q "${device}" <<< "husky shiba akita"
   then
+    kernel=zuma
     grep -q "${device}" <<< "husky shiba" && device_family=shusky || device_family=${device}
-    mkdir "${device_family}" 2>/dev/null || true
-    cd "${device_family}"
+    mkdir "${kernel}" 2>/dev/null || true
+    cd "${kernel}"
     repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-zuma.git -b "${android_version_number}"
+    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15
     sync_repo
     ./build_"${device_family}".sh --config=no_download_gki --lto=full
     cp -rf out/"${device_family}"/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
   # 7th and 6th gen (same manifest)
   elif grep -q "${device}" <<< "cheetah panther lynx tangorpro felix raven oriole bluejay"
   then
+    kernel=gs
     if grep -q "${device}" <<< "cheetah panther"
     then
       device_family=pantah
@@ -169,21 +172,47 @@ do
     else
       device_family=${device}
     fi
-    mkdir "${device_family}" 2>/dev/null || true
-    cd "${device_family}"
+    mkdir "${kernel}" 2>/dev/null || true
+    cd "${kernel}"
     repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-gs.git -b "${android_version_number}"
+    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15
     sync_repo
-    if [[ ${device_family} == "pantah" ]]
-    then
-      BUILD_AOSP_KERNEL=1 LTO=full ./build_cloudripper.sh
-    elif [[ ${device_family} == "raviole" ]]
-    then
-      BUILD_AOSP_KERNEL=1 LTO=full ./build_slider.sh
-    else
-      BUILD_AOSP_KERNEL=1 LTO=full ./build_"${device_family}".sh
-    fi
+    BUILD_AOSP_KERNEL=1 LTO=full ./build_"${device_family}".sh
     cp -rf out/mixed/dist/* "${android_top}"/device/google/"${device_family}"-kernels/**/*
+  # 5th gen
+  elif grep -q "${device}" <<< "redfin barbet bramble"
+  then
+    device_family=redbull kernel=redbull
+    mkdir "${kernel}" 2>/dev/null || true
+    cd "${kernel}"
+    repo_safe_dir
+    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15
+    sync_repo
+    BUILD_CONFIG=private/msm-google/build.config."${device_family}".vintf build/build.sh
+    rm -rf "${android_top}"/device/google/"${device_family}"-kernel
+    mkdir -p "${android_top}"/device/google/"${device_family}"-kernel/vintf
+    cp -rf out/android-msm-pixel-4.19/dist/* "${android_top}"/device/google/"${device_family}"-kernel
+    cp -rf out/android-msm-pixel-4.19/dist/* "${android_top}"/device/google/"${device_family}"-kernel/vintf
+  # 4th gen
+  elif grep -q "${device}" <<< "sunfish coral flame"
+  then
+    kernel_repo=coral
+    if grep -q "${device}" <<< "coral flame"
+    then
+      device_family=floral kernel=coral
+    else
+      device_family=${device} kernel=${device}
+    fi
+    mkdir "${kernel_repo}" 2>/dev/null || true
+    cd "${kernel_repo}"
+    repo_safe_dir
+    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel_repo}".git -b 13
+    sync_repo
+    KBUILD_BUILD_VERSION=1 KBUILD_BUILD_USER=build-user KBUILD_BUILD_HOST=build-host KBUILD_BUILD_TIMESTAMP="Thu 01 Jan 1970 12:00:00 AM UTC" \
+    BUILD_CONFIG=private/msm-google/build.config."${device_family}" build/build.sh
+    rm -rf "${android_top}"/device/google/"${kernel}"-kernel
+    mkdir "${android_top}"/device/google/"${kernel}"-kernel
+    cp -rf out/android-msm-pixel-4.14/dist/* "${android_top}"/device/google/"${kernel}"-kernel
   fi
   cd "${android_top}"
 

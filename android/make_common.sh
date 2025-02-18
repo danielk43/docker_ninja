@@ -65,7 +65,7 @@ repo_safe_dir() {
   while read -r path
   do
     git config --global --add safe.directory "${PWD}"/"${path}"
-  done < .repo/project.list
+  done < .repo/project.list >/dev/null || true
 }
 
 repo_init_ref() {
