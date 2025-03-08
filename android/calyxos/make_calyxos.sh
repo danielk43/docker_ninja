@@ -56,6 +56,7 @@ do
   # Get vendor image
   if [[ "$persist_vendor" == "0" ]]
   then
+    echo "INFO: Extracting vendor files"
     rm -rf vendor/google/*
     calyx/scripts/pixel/device.sh "${device}"
   fi
