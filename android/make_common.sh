@@ -107,7 +107,7 @@ export release_tag="dev"
 
 # Add environment
 [[ -n "${ANDROID_VERSION}" ]] && export android_version=${ANDROID_VERSION}
-[[ -n "${BUILD_TYPE}" ]] && export build_type=${BUILD_TYPE}
+[[ -n "${BUILD_TYPE}" ]] && export build_type=${BUILD_TYPE^^}
 [[ -n "${BUILD_VARIANT}" ]] && export variant=${BUILD_VARIANT}
 [[ -n "${CCACHE_SIZE}" ]] && export ccache_size=${CCACHE_SIZE}
 [[ -n "${DEVICES}" ]] && export device_list=${DEVICES}

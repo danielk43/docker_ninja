@@ -65,7 +65,7 @@ do
   [[ -n "${user_scripts}" ]] && apply_user_scripts
 
   # Set build type
-  [[ -n "${build_type}" ]] && sed -i "s/PRODUCT_VERSION_EXTRA +=.*/PRODUCT_VERSION_EXTRA += -${build_type^^}/" vendor/calyx/config/version.mk
+  [[ -n "${build_type}" ]] && sed -i "s/PRODUCT_VERSION_EXTRA +=.*/PRODUCT_VERSION_EXTRA += -${build_type}/" vendor/calyx/config/version.mk
 
   # Verify official build release url updated
   if [[ "${OFFICIAL_BUILD}" == "true" ]]
