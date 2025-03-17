@@ -59,6 +59,7 @@ RUN apt update \
  && npm cache clean --force \
  && HOME=/root git config --global user.name "Ninja CI bot" \
  && HOME=/root git config --global user.email "ninja@docker.local" \
+ && HOME=/root git config --global color.ui false \
  && HOME=/root git config --global advice.detachedHead false \
  && HOME=/root git config --global http.postBuffer 524288000 \
  && HOME=/root git config --global pack.windowMemory "4096m" \
