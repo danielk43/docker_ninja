@@ -20,7 +20,7 @@ do
   if grep -q "${device}" <<< "axolotl blueline crosshatch sargo bonito flame coral sunfish"
   then
     export calyx_version_major="5"
-  elif grep -q "${device}" <<< "redfin bramble barbet oriole raven bluejay panther cheetah lynx tangorpro felix shiba husky akita tokay caiman komodo comet devon rhode FP4 FP5"
+  elif grep -q "${device}" <<< "redfin bramble barbet oriole raven bluejay panther cheetah lynx tangorpro felix shiba husky akita tokay caiman komodo comet devon hawao rhode FP4 FP5"
   then
     export calyx_version_major="6"
   else
