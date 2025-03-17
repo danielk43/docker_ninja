@@ -134,7 +134,6 @@ do
   # Build kernel
   [[ -z "${kernel_dir}" ]] && echo "FATAL: GrapheneOS Kernel directory missing" && usage
   cd "${kernel_dir}"
-  clean_repo
   # 6th through 9th gen
   if grep -q "${device}" <<< "comet komodo caiman tokay husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
   then
@@ -158,6 +157,7 @@ do
     cd "${kernel}"
     repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15-qpr2
+    clean_repo
     sync_repo
     ./build_"${codename}".sh --config=no_download_gki --config=no_download_gki_fips140 --lto=full
     cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
@@ -169,6 +169,7 @@ do
     cd "${kernel}"
     repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15
+    clean_repo
     sync_repo
     BUILD_CONFIG=private/msm-google/build.config."${codename}".vintf build/build.sh
     rm -rf "${android_top}"/device/google/"${codename}"-kernel
@@ -194,6 +195,7 @@ do
     cd "${kernel_repo}"
     repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel_repo}".git -b 13
+    clean_repo
     sync_repo
     KBUILD_BUILD_VERSION=1 KBUILD_BUILD_USER=build-user KBUILD_BUILD_HOST=build-host KBUILD_BUILD_TIMESTAMP="Thu 01 Jan 1970 12:00:00 AM UTC" \
     BUILD_CONFIG=private/msm-google/build.config."${codename}" build/build.sh
