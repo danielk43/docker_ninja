@@ -28,6 +28,5 @@ RUN mkdir -p bin \
  && cd CMake && ./bootstrap && make && make install && cd - >/dev/null \
  && apt -y autoremove \
  && apt autoclean \
- && rm -rf /var/cache/apt/* CMake *.zip \
- && ln -sf /proc/1/fd/1 /var/log/docker.log
+ && rm -rf /var/cache/apt/* CMake *.zip
 

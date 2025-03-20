@@ -34,6 +34,7 @@ docker run --rm \
 -v "/path/to/android/grapheneos/ROMs:/android_build/out" \
 -v "/path/to/userscripts:/android_build/scripts" \ # Optional
 -v "/path/to/src:/android_build/src" \
+-v "/path/to/log:/android_build/log" \ # Optional
 -v "/path/to/vanadium:/android_build/chromium" \ # Optional
 danielk43/ninja_android:latest
 ```
@@ -62,6 +63,7 @@ docker run --rm \
 -v "/path/to/userscripts:/android_build/scripts" \
 -v "/path/to/src/vendor/factory_images:/tmp/pixel" \ # Cache vendor images (Optional)
 -v "/path/to/src:/android_build/src" \
+-v "/path/to/log:/android_build/log"
 danielk43/ninja_android:latest
 ```
 
@@ -87,6 +89,7 @@ docker run --rm \
 -v "/path/to/android/lineageos/ROMs:/android_build/out" \
 -v "/path/to/userscripts:/android_build/scripts" \
 -v "/path/to/src:/android_build/src" \
+-v "/path/to/log:/android_build/log"
 danielk43/ninja_android:latest
 ```
 

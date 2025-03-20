@@ -63,8 +63,7 @@ RUN apt update \
  && HOME=/root git config --global advice.detachedHead false \
  && HOME=/root git config --global http.postBuffer 524288000 \
  && HOME=/root git config --global pack.windowMemory "4096m" \
- && echo 'alias ll="ls -alF"' >> /root/.bashrc \
- && ln -sf /proc/1/fd/1 /var/log/docker.log
+ && echo 'alias ll="ls -alF"' >> /root/.bashrc
 
 COPY --chmod=0755 make_common.sh android/make_common.sh
 COPY --chmod=0755 git_deep_clean.sh android/git_deep_clean.sh
