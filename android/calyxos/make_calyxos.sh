@@ -61,6 +61,47 @@ do
     calyx/scripts/pixel/device.sh "${device}"
   fi
 
+  # Build OS
+  combo="${device} ${variant}"
+  echo "INFO: Breakfast combo: ${combo}"
+  breakfast ${combo}
+
+  # Create outfile directory
+  [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
+  rm -rf "${device_out}"
+  mkdir -p "${device_out}" 2>/dev/null
+ 
+  print_env
+
+  if [[ "${sign_build}" == "1" ]]
+  then
+    export BUILD_NUMBER="${variant}.signed.${build_date}"
+    common_keys="${keys_dir}/common"
+    device_keys="${keys_dir}/${device}"
+
+    # Generate signing keys
+    [[ -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
+    echo "INFO: Building otatools packages"
+    m otatools-package
+
+    if [[ ! -d "${common_keys}" || ! -d "${device_keys}" ]]
+    then
+      cd "${otatools_dir}"
+      [[ ! -d "${common_keys}" ]] && yes "" | "${android_top}"/vendor/calyx/scripts/mkcommonkeys.sh "${common_keys}" "${android_dname}" || true
+      [[ ! -d "${device_keys}" ]] && yes "" | "${android_top}"/vendor/calyx/scripts/mkkeys.sh "${device_keys}" "${android_dname}" || true
+      cd "${android_top}"
+    fi
+
+    # Link keys (containerized link will not be found on host)
+    if [[ "${keys_dir}" != "${otatools_dir}/keys" ]]
+    then
+      mkdir -p "${otatools_dir}"/keys "${android_top}"/keys 2>/dev/null || true
+      ln -s "${common_keys}" "${otatools_dir}"/keys 2>/dev/null || echo "WARN: Linking common signing keys in out/ failed"
+      ln -s "${device_keys}" "${android_top}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys in keys/ failed"
+      ln -s "${device_keys}" "${otatools_dir}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys in out/ failed"
+    fi
+  fi
+
   # Apply User Scripts
   [[ -n "${user_scripts}" ]] && apply_user_scripts
 
@@ -77,50 +118,8 @@ do
     fi
   fi
 
-  # Build OS
-  combo="${device} ${variant}"
-  echo "INFO: Breakfast combo: ${combo}"
-  breakfast ${combo}
-
-  # Create outfile directory
-  [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
-  rm -rf "${device_out}"
-  mkdir -p "${device_out}" 2>/dev/null
- 
-  print_env
-
   if [[ "${sign_build}" == "1" ]]
   then
-    export BUILD_NUMBER="${variant}.signed.${build_date}"
-
-    # Generate signing keys
-    [[ "${sign_build}" == "1" && -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
-    if [[ "${sign_build}" == "1" ]]
-    then
-      echo "INFO: Building otatools packages"
-      mkdir release 2>/dev/null || true
-      m otatools-package
-      common_keys="${keys_dir}/common"
-      device_keys="${keys_dir}/${device}"
-      if [[ ! -d "${common_keys}" || ! -d "${device_keys}" ]]
-      then
-        m otatools-keys-package
-        cd "${otatools_dir}"
-        [[ ! -d "${common_keys}" ]] && yes "" | "${android_top}"/vendor/calyx/scripts/mkcommonkeys.sh "${common_keys}" "${android_dname}" || true
-        [[ ! -d "${device_keys}" ]] && yes "" | "${android_top}"/vendor/calyx/scripts/mkkeys.sh "${device_keys}" "${android_dname}" || true
-        cd "${android_top}"
-      fi
-    fi
-
-    # Link keys (containerized link will not be found on host)
-    if [[ "${keys_dir}" != "${otatools_dir}/keys" ]]
-    then
-      mkdir -p "${otatools_dir}"/keys "${android_top}"/keys 2>/dev/null || true
-      ln -s "${common_keys}" "${otatools_dir}"/keys 2>/dev/null || echo "WARN: Linking common signing keys in out/ failed"
-      ln -s "${device_keys}" "${android_top}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys in keys/ failed"
-      ln -s "${device_keys}" "${otatools_dir}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys in out/ failed"
-    fi
-
     m target-files-package
 
     # Sign and Release build
