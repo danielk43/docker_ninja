@@ -1,0 +1,51 @@
+name: Docker Init
+description: Common operations for build and push flows
+
+inputs:
+  operation:
+    description: Operation to perform
+    required: true
+  dockerhub_username:
+    description: Docker Hub username
+    required: false
+  dockerhub_token:
+    description: Docker Hub token
+    required: false
+  repository_owner:
+    description: GitHub repository owner
+    required: false
+  image_tag:
+    description: Docker image tag name
+    required: false
+
+outputs:
+  tags:
+    description: Docker tags
+    value: ${{ steps.meta.outputs.tags }}
+  labels:
+    description: Docker labels
+    value: ${{ steps.meta.outputs.labels }}
+
+runs:
+  using: composite
+  steps:
+    # Docker Login
+    - name: Log into registry
+      if: inputs.operation == 'login' && github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull') && github.actor != 'dependabot[bot]'
+      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772
+      with:
+        registry: docker.io
+        username: ${{ inputs.dockerhub_username }}
+        password: ${{ inputs.dockerhub_token }}
+
+    # Extract metadata (tags, labels) for Docker builds
+    # https://github.com/docker/metadata-action
+    - name: Extract Docker metadata
+      id: meta
+      if: inputs.operation == 'metadata'
+      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804
+      with:
+        images: docker.io/${{ inputs.repository_owner }}/ninja_${{ inputs.image_tag }}
+        tags: |
+          type=raw,value=latest,enable=true
+
