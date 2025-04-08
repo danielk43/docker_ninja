@@ -130,8 +130,8 @@ export out_dir=/android_build/out
 export kernel_dir=/android_build/kernel
 export chromium_dir=/android_build/chromium
 
-# Begin Logging
-exec &>> /android_build/log/build_"$(date +%F_%H-%M-%S)".log
+# Begin logging if dir is mounted
+[[ -d /android_build/log ]] && exec &>> /android_build/log/build_"$(date +%F_%H-%M-%S)".log
 
 # Validations
 [[ -z "${device_list}" ]] && echo "FATAL: Device list (-d) or DEVICES is required" && exit 1
