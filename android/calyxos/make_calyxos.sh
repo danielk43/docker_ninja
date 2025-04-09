@@ -75,15 +75,15 @@ do
 
   if [[ "${sign_build}" == "1" ]]
   then
+    [[ -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
     export BUILD_NUMBER="${variant}.signed.${build_date}"
     common_keys="${keys_dir}/common"
     device_keys="${keys_dir}/${device}"
 
-    # Generate signing keys
-    [[ -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
     echo "INFO: Building otatools packages"
     m otatools-package
 
+    # Generate signing keys
     if [[ ! -d "${common_keys}" || ! -d "${device_keys}" ]]
     then
       cd "${otatools_dir}"
