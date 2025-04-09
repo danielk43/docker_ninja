@@ -51,7 +51,6 @@ RUN apt update \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
  && pip3 install --break-system-packages --no-cache-dir lxml protobuf pyyaml \
  && apt -y autoremove \
- && apt autoclean \
  && rm -rf /var/cache/apt/* *.zip \
  && npm install --global --upgrade yarn \
  && npm cache clean --force \

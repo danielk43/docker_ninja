@@ -27,6 +27,5 @@ RUN mkdir -p bin \
  && git clone https://github.com/Kitware/CMake.git \
  && cd CMake && ./bootstrap && make && make install && cd - >/dev/null \
  && apt -y autoremove \
- && apt autoclean \
  && rm -rf /var/cache/apt/* CMake *.zip
 
