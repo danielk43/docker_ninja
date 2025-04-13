@@ -134,7 +134,7 @@ do
   [[ -z "${kernel_dir}" ]] && echo "FATAL: GrapheneOS Kernel directory missing" && usage
   cd "${kernel_dir}"
   # 6th through 9th gen
-  if grep -q "${device}" <<< "comet komodo caiman tokay husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
+  if grep -q "${device}" <<< "tegu comet komodo caiman tokay husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
   then
     kernel=pixel
     if grep -q "${device}" <<< "komodo caiman tokay"
