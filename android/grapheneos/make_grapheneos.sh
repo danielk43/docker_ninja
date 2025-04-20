@@ -260,7 +260,15 @@ do
   m target-files-package
   m otatools-package
   script/finalize.sh
-  echo -e "${!keys_password}\n${!keys_password}" | script/generate-release.sh "${device}" "${BUILD_NUMBER}"
+  expect << EOF
+    set timeout -1
+    spawn script/generate-release.sh "${device}" "${BUILD_NUMBER}"
+    expect "Enter key passphrase"
+    send -- "${!keys_password}\r"
+    expect "Enter passphrase"
+    send -- "${!keys_password}\r"
+    expect eof
+EOF
 
   # Create outfile directory
   [[ -z "${out_dir}" ]] && export out_dir="${ANDROID_BUILD_TOP}/releases"
