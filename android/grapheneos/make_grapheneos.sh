@@ -160,47 +160,6 @@ do
     sync_repo
     ./build_"${codename}".sh --config=no_download_gki --config=no_download_gki_fips140 --lto=full
     cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
-  # 5th gen
-  elif grep -q "${device}" <<< "redfin barbet bramble"
-  then
-    codename=redbull kernel=redbull
-    mkdir "${kernel}" 2>/dev/null || true
-    cd "${kernel}"
-    repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15
-    clean_repo
-    sync_repo
-    BUILD_CONFIG=private/msm-google/build.config."${codename}".vintf build/build.sh
-    rm -rf "${android_top}"/device/google/"${codename}"-kernel
-    mkdir -p "${android_top}"/device/google/"${codename}"-kernel/vintf
-    if [[ "${variant}" =~ ^(eng|userdebug)$ ]]
-    then
-      cp -rf out/android-msm-pixel-4.19/dist/* "${android_top}"/device/google/"${codename}"-kernel
-    elif [[ "${variant}" == "user" ]]
-    then
-      cp -rf out/android-msm-pixel-4.19/dist/* "${android_top}"/device/google/"${codename}"-kernel/vintf
-    fi
-  # 4th gen
-  elif grep -q "${device}" <<< "sunfish coral flame"
-  then
-    kernel_repo=coral
-    if grep -q "${device}" <<< "coral flame"
-    then
-      codename=floral kernel=coral
-    else
-      codename=${device} kernel=${device}
-    fi
-    mkdir "${kernel_repo}" 2>/dev/null || true
-    cd "${kernel_repo}"
-    repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel_repo}".git -b 13
-    clean_repo
-    sync_repo
-    KBUILD_BUILD_VERSION=1 KBUILD_BUILD_USER=build-user KBUILD_BUILD_HOST=build-host KBUILD_BUILD_TIMESTAMP="Thu 01 Jan 1970 12:00:00 AM UTC" \
-    BUILD_CONFIG=private/msm-google/build.config."${codename}" build/build.sh
-    rm -rf "${android_top}"/device/google/"${kernel}"-kernel
-    mkdir "${android_top}"/device/google/"${kernel}"-kernel
-    cp -rf out/android-msm-pixel-4.14/dist/* "${android_top}"/device/google/"${kernel}"-kernel
   fi
   cd "${android_top}"
 
