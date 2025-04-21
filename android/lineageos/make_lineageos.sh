@@ -12,9 +12,7 @@ set -eo pipefail
 
 [[ -n "${gms_makefile}" ]] && export WITH_GMS="true" GMS_MAKEFILE="${gms_makefile}"
 
-# Device Build
-devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
-echo "INFO: Device list: ${devices}"
+# Initialize Device Builds
 for device in ${devices}
 do
   export device

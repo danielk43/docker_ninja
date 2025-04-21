@@ -134,8 +134,7 @@ export chromium_dir=/android_build/chromium
 [[ -d /android_build/log ]] && exec &>> /android_build/log/build_"$(date +%F_%H-%M-%S)".log
 
 # Validations
-[[ -z "${device_list}" ]] && echo "FATAL: Device list (-d) or DEVICES is required" && exit 1
-[[ -z "${android_top}" ]] && echo "FATAL: Top dir (-a) or -v \$TOP/android_build/src is required" && exit 1
+[[ -z "${android_top}" ]] && echo "FATAL: Top dir (-v \$TOP:/android_build/src) is required" && exit 1
 
 # Set up ccache
 if [[ -n "${ccache_size}" ]]
@@ -177,8 +176,10 @@ fi
 export android_platform=${android_platform,,}
 export android_version_number ANDROID_VERSION=${android_version_number}
 export build_path="${BUILD_HOME}"/android/"${android_platform}"
+export devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
 export AVB_TOOL="${android_top}/external/avb/avbtool.py"
 export MAKE_KEY="${android_top}/development/tools/make_key"
 
+[[ -n "${devices}" ]] && echo "INFO: Device list: ${devices}"
 . "${build_path}"/make_"${android_platform}".sh 
 
