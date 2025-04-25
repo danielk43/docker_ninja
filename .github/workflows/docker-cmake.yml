@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - cmake/**
-      - github/**
+      - .github/**
   pull_request:
   schedule:
     - cron: '5 4 21 * *'
