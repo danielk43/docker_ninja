@@ -105,5 +105,3 @@ repo_safe_dir
 [[ "$clean" == "1" ]] && clean_src
 [[ "$prune" == "1" ]] && prune_src
 
-exit 0
-

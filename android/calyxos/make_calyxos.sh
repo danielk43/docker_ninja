@@ -142,7 +142,10 @@ do
 done
 
 # Deep clean android and chromium src
-[[ "${clean_repo}" == "1" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${android_top}"
+if [[ "${clean_repo}" == "1" ]]
+then
+  . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${android_top}"
+fi
 
 exit 0
 

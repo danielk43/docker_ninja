@@ -254,9 +254,20 @@ EOF
 done
 
 # Deep clean android and chromium src
-[[ "${clean_repo}" == "1" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${android_top}"
-[[ "${clean_repo}" == "1" && -d "${chromium_dir}/.git" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cg -d "${chromium_dir}"
-[[ "${clean_repo}" == "1" && -d "${chromium_dir}/src/.git" ]] && . "${BUILD_HOME}"/git_deep_clean.sh -cgx -d "${chromium_dir}/src"
+if [[ "${clean_repo}" == "1" ]]
+then
+  . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${android_top}"
+  if [[ -d "${chromium_dir}/.git" ]]
+  then
+    git config --global --add safe.directory "${chromium_dir}"
+    . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${chromium_dir}"
+  fi
+  if [[ -d "${chromium_dir}/src/.git" ]]
+  then
+    git config --global --add safe.directory "${chromium_dir}/src"
+    . "${BUILD_HOME}"/android/git_deep_clean.sh -cgx -d "${chromium_dir}/src"
+  fi
+fi
 
 exit 0
 
