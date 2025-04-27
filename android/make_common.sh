@@ -173,10 +173,11 @@ fi
 [[ -z "${android_platform}" ]] && echo "FATAL: Supported Android platform not found" && exit 1
 [[ ! "${android_version_number}" =~ ^[[:digit:]]{1,2}?.[[:digit:]]$ ]] && echo "FATAL: Could not determine Android version number" && exit 1
 
+devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
+export devices
 export android_platform=${android_platform,,}
 export android_version_number ANDROID_VERSION=${android_version_number}
 export build_path="${BUILD_HOME}"/android/"${android_platform}"
-export devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
 export AVB_TOOL="${android_top}/external/avb/avbtool.py"
 export MAKE_KEY="${android_top}/development/tools/make_key"
 
