@@ -45,6 +45,9 @@ RUN apt update \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
  && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
+ && cd $HOME/depot_tools \
+ && ./update_depot_tools \
+ && cd $HOME \
  && curl -LO $(curl -s https://api.github.com/repos/protocolbuffers/protobuf/releases/latest \
   | grep "browser_download_url.*linux-x86_64.zip" | cut -d\" -f4) \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
