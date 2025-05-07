@@ -146,7 +146,7 @@ fi
 export BUILD_HOME="${PWD}"
 
 # Update depot tools
-cd depot_tools && git pull || true
+cd depot_tools && git pull origin main || true
 
 # If android_version is not set, try to calculate platform and version
 cd "${android_top}"
