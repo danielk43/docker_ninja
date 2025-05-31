@@ -2,10 +2,11 @@ FROM debian:bookworm-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG HOME=/android_build
+ARG JDK_VERSION=21
+ARG NODEJS_VERSION=22
 
 WORKDIR $HOME
 
-ENV ANDROID_HOME=$HOME/cmdline-tools
 ENV USE_CCACHE=1
 ENV CCACHE_COMPRESSLEVEL=1
 ENV CCACHE_DIR=$HOME/ccache
@@ -36,11 +37,16 @@ RUN apt update \
  && apt -y upgrade \
  && apt -y install curl git-core \
  && curl -L https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
- && curl -L https://deb.nodesource.com/setup_20.x | bash \
+ && curl -L https://deb.nodesource.com/setup_"$NODEJS_VERSION".x | bash \
+ && curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | \
+    gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg \
+ && echo "deb https://packages.adoptium.net/artifactory/deb bookworm main" | \
+    tee /etc/apt/sources.list.d/adoptium.list \
+ && apt update \
  && apt install -y bc binutils bison build-essential ccache cgpt expect file flex g++-multilib \
     gcc-multilib git-lfs gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev \
     libelf-dev libgcc-s1 libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev \
-    libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs openjdk-17-jdk openssh-server pngcrush \
+    libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush \
     python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
@@ -63,6 +69,7 @@ RUN apt update \
  && HOME=/root git config --global advice.detachedHead false \
  && HOME=/root git config --global http.postBuffer 524288000 \
  && HOME=/root git config --global pack.windowMemory "4096m" \
+ && HOME=/root git config --global trailer.changeid.key "Change-Id" \
  && echo 'alias ll="ls -alF"' >> /root/.bashrc
 
 COPY --chmod=0755 make_common.sh android/make_common.sh
