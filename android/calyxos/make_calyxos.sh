@@ -15,16 +15,13 @@ do
   export device
 
   # Set OS Major Version  # https://calyxos.org/install
-  if grep -q "${device}" <<< "axolotl blueline crosshatch sargo bonito flame coral sunfish"
-  then
-    export calyx_version_major="5"
-  elif grep -q "${device}" <<< "redfin bramble barbet oriole raven bluejay panther cheetah lynx tangorpro felix shiba husky akita tokay caiman komodo comet devon hawao rhode FP4 FP5"
-  then
-    export calyx_version_major="6"
-  else
-    echo "FATAL: Device ${device} not supported by CalyxOS" && usage
-  fi
-
+  calyxos6_devices=(redfin bramble barbet oriole raven bluejay panther cheetah lynx tangorpro felix shiba \
+                   husky akita tokay caiman komodo comet devon hawao rhode fogos fogo bangkk FP4 FP5)
+  for calyxos6_device in ${calyxos6_devices[@]}
+  do
+    [[ "${device}" == "${calyxos6_device}" ]] && export calyx_version_major="6" && break || true
+  done
+  [[ -z "${calyx_version_major}" ]] && echo "FATAL: Device ${device} not supported by CalyxOS" && usage
   echo "INFO: Building CalyxOS ${calyx_version_major} for ${device}"
 
   # Reset COS repo
