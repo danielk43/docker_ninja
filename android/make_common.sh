@@ -20,25 +20,10 @@ ccache_init() {
   ccache -o compression=true
 }
 
-git_reset_clean() {
-  for cmd in am cherry-pick merge rebase revert
-  do
-    git $cmd --abort 2>/dev/null || true
-  done
-  git add --all
-  git reset --hard
-  if git remote -v | grep -i "chromium/src" > /dev/null
-  then
-    git clean -ffdx
-  else
-    git clean -ffd
-  fi
-}
-
-clean_repo() {
-  rm -rf ./out ./releases ./*.zip
+git_clean_repo() {
+  rm -rf ./out ./releases ./*.zip ./bazel-*
   find . -type f -name "index.lock" -delete
-  repo forall -c bash -c "git_reset_clean" &>/dev/null || true
+  . "${BUILD_HOME}"/android/git_deep_clean.sh -c -d "${PWD}" || true
 }
 
 sync_repo() {
@@ -92,7 +77,6 @@ sync_jobs=$(nproc)
 export build_date
 export sync_jobs
 
-export -f git_reset_clean
 export android_dname="/CN=Android/"
 export chromium_dname="CN=Chromium"
 export ccache_size=50G

@@ -14,9 +14,8 @@ if [[ -n "${VANADIUM_PASSWORD}" && -d ${chromium_dir} ]]
 then
   cd "${chromium_dir}"
   [[ -f "args.gn" ]] || git clone https://github.com/GrapheneOS/Vanadium.git .
-  clean_repo
+  git_clean_repo
   git config --global --add safe.directory "${chromium_dir}"
-  git reset --hard && git clean -ffd
   git fetch --all --force --tags --prune --prune-tags
   git checkout main # TODO: add tags checkout functionality
   git pull --rebase -X ours "$(git remote)" "$(git branch --show-current)" # rebase on tags also? git describe --exact-match --tags
@@ -39,8 +38,7 @@ then
   do
     git config --global --add safe.directory "${PWD}"/"${repository}"
   done
-  rm -rf .git/*-apply && git_reset_clean &> /dev/null
-  git submodule foreach "git reset --hard; git clean -ffdx" &> /dev/null || true
+  . "${BUILD_HOME}"/android/git_deep_clean.sh -cx -d "${PWD}" || true
   git fetch --all --force --tags --prune --prune-tags
   git checkout --force "${vanadium_current_version}"
   git am --whitespace=nowarn --keep-non-patch "${chromium_dir}"/patches/*.patch
@@ -82,7 +80,7 @@ do
 
   # Reset GOS repo
   repo_safe_dir
-  clean_repo
+  git_clean_repo
 
   # Sync GrapheneOS repo
   export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
@@ -154,7 +152,7 @@ do
     cd "${kernel}"
     repo_safe_dir
     repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15-qpr2
-    clean_repo
+    git_clean_repo
     sync_repo
     ./build_"${codename}".sh --config=no_download_gki --config=no_download_gki_fips140 --lto=full
     cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*

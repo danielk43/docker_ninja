@@ -29,7 +29,7 @@ do
 
   # Reset COS repo
   repo_safe_dir
-  clean_repo
+  git_clean_repo
 
   # Set Variables
   export device_out="${out_dir}"/"${device}"/"${build_date}"

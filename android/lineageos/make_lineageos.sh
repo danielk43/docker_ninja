@@ -45,7 +45,7 @@ do
 
   # Sync LOS repo
   repo_safe_dir
-  clean_repo
+  git_clean_repo
   repo init -u https://github.com/LineageOS/android.git -b lineage-"${android_version_number}" --git-lfs
   [[ "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
   repo_safe_dir

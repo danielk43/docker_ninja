@@ -40,16 +40,23 @@ clean_src() {
   rm -rf out releases ./*.zip
   find . -type f -name "index.lock" -delete
   echo -e "\nClean and Reset src in $dir"
+
   for cmd in am cherry-pick merge rebase revert; do
     echo "Running cmd: ${REPO_PREFIX} git $cmd --abort"
     ${REPO_PREFIX} git "$cmd" --abort 2>/dev/null || true
     echo "Running cmd: ${REPO_PREFIX} git submodule foreach git $cmd --abort"
     ${REPO_PREFIX} git submodule foreach "git $cmd --abort" 2>/dev/null || true
   done
-  for cmd in "add --all" "reset --hard" "clean -ffd${xflag}"
-  do
+
+  declare -a git_commands=(
+    "add --all"
+    "reset --hard"
+    "clean -ffd${xflag}"
+  )
+
+  for cmd in "${git_commands[@]}"; do
     echo "Running cmd: ${REPO_PREFIX} git $cmd"
-    ${REPO_PREFIX} git "$cmd" || true
+    ${REPO_PREFIX} git $cmd || true
     echo "Running cmd: ${REPO_PREFIX} git submodule foreach git $cmd"
     ${REPO_PREFIX} git submodule foreach "git $cmd" 2>/dev/null || true
   done
