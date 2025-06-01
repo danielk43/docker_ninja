@@ -17,7 +17,7 @@ do
   # Set OS Major Version  # https://calyxos.org/install
   calyxos6_devices=(redfin bramble barbet oriole raven bluejay panther cheetah lynx tangorpro felix shiba \
                    husky akita tokay caiman komodo comet devon hawao rhode fogos fogo bangkk FP4 FP5)
-  for calyxos6_device in ${calyxos6_devices[@]}
+  for calyxos6_device in "${calyxos6_devices[@]}"
   do
     [[ "${device}" == "${calyxos6_device}" ]] && export calyx_version_major="6" && break || true
   done

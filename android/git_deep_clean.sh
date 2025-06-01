@@ -56,7 +56,7 @@ clean_src() {
 
   for cmd in "${git_commands[@]}"; do
     echo "Running cmd: ${REPO_PREFIX} git $cmd"
-    ${REPO_PREFIX} git $cmd || true
+    ${REPO_PREFIX} git "$cmd" || true
     echo "Running cmd: ${REPO_PREFIX} git submodule foreach git $cmd"
     ${REPO_PREFIX} git submodule foreach "git $cmd" 2>/dev/null || true
   done
