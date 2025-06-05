@@ -43,10 +43,10 @@ RUN apt update \
  && echo "deb https://packages.adoptium.net/artifactory/deb bookworm main" | \
     tee /etc/apt/sources.list.d/adoptium.list \
  && apt update \
- && apt install -y bc binutils bison build-essential ccache cgpt expect file flex g++-multilib \
-    gcc-multilib git-lfs gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev \
-    libelf-dev libgcc-s1 libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev \
-    libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush \
+ && apt install -y bc binutils bison build-essential ccache cgpt expect file flex git-lfs gperf \
+    imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
+    libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev libssl-dev \
+    libxml2 libxml2-utils lz4 lzop m4 nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush \
     python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
@@ -60,7 +60,8 @@ RUN apt update \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
  && pip3 install --break-system-packages --no-cache-dir lxml protobuf pyyaml \
  && apt -y autoremove \
- && rm -rf /var/cache/apt/* *.zip \
+ && apt -y clean \
+ && rm -rf *.zip \
  && npm install --global --upgrade yarn \
  && npm cache clean --force \
  && HOME=/root git config --global user.name "Ninja CI bot" \
