@@ -23,7 +23,7 @@ ccache_init() {
 git_clean_repo() {
   rm -rf ./out ./releases ./*.zip ./bazel-*
   find . -type f -name "index.lock" -delete
-  . "${BUILD_HOME}"/android/git_deep_clean.sh -c -d "${PWD}" || true
+  . "${BUILD_HOME}"/android/git_deep_clean.sh "$@" -p "${prune_since}" -e "${expire_since}" || true
 }
 
 sync_repo() {
@@ -33,8 +33,7 @@ sync_repo() {
   set +e
   until [[ "${n}" -gt "${r}" ]]
   do
-    repo sync --force-sync -j"${sync_jobs}" && \
-    repo forall -c "git lfs pull" && break # only needed for pre-lfs existing repos
+    repo sync --force-sync -j"${sync_jobs}" && break # only needed for pre-lfs existing repos
     n=$((n+1))
     sleep 3
     [[ "${n}" -le "${r}" ]] && echo "WARN: repo sync failed, retry ${n} of ${r}"
@@ -43,14 +42,25 @@ sync_repo() {
   set -e
 }
 
+# Allow existing repo to work in container (will change some ownership to root)
 repo_safe_dir() {
-  # Allow existing repo to work in container (will change some ownership to root)
-  git config --global --add safe.directory "${PWD}/.repo/manifests"
-  git config --global --add safe.directory "${PWD}/.repo/repo"
-  while read -r path
-  do
-    git config --global --add safe.directory "${PWD}"/"${path}"
-  done < .repo/project.list >/dev/null || true
+  if [[ -d "./.git" ]]
+  then
+    git config --global --add safe.directory "${PWD}"
+    # shellcheck disable=SC2046
+    for repository in $(dirname $(find . -type d -name .git -printf "%P\n"))
+    do
+      git config --global --add safe.directory "${PWD}"/"${repository}"
+    done
+  elif [[ -d "./.repo" ]]
+  then
+    git config --global --add safe.directory "${PWD}/.repo/manifests"
+    git config --global --add safe.directory "${PWD}/.repo/repo"
+    while read -r project
+    do
+      git config --global --add safe.directory "${PWD}"/"${project}"
+    done < .repo/project.list >/dev/null || true
+  fi
 }
 
 repo_init_ref() {
@@ -81,8 +91,10 @@ export android_dname="/CN=Android/"
 export chromium_dname="CN=Chromium"
 export ccache_size=50G
 export clean_repo=0
+export expire_since="30.days.ago"
 export persist_vendor=0
 export print_env=0
+export prune_since="2.weeks.ago"
 export retries=5
 export roomservice=0
 export sign_build=0
@@ -97,7 +109,9 @@ export release_tag="dev"
 [[ -n "${DEVICES}" ]] && export device_list=${DEVICES}
 [[ -n "${DNAME_ANDROID}" ]] && export android_dname=${DNAME_ANDROID}
 [[ -n "${DNAME_CHROMIUM}" ]] && export chromium_dname=${DNAME_CHROMIUM}
+[[ -n "${EXPIRE_SINCE}" ]] && export expire_since=${EXPIRE_SINCE}
 [[ -n "${GMS_MAKEFILE}" ]] && export gms_makefile=${GMS_MAKEFILE}
+[[ -n "${PRUNE_SINCE}" ]] && export prune_since=${PRUNE_SINCE}
 [[ -n "${RELEASE_TAG}" ]] && export release_tag=${RELEASE_TAG}
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}

@@ -26,7 +26,7 @@ do
 
   # Reset COS repo
   repo_safe_dir
-  git_clean_repo
+  git_clean_repo -c -d "${PWD}"
 
   # Set Variables
   export device_out="${out_dir}"/"${device}"/"${build_date}"
@@ -141,7 +141,7 @@ done
 # Deep clean android and chromium src
 if [[ "${clean_repo}" == "1" ]]
 then
-  . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${android_top}"
+  git_clean_repo -cg -d "${android_top}"
 fi
 
 exit 0

@@ -14,8 +14,8 @@ if [[ -n "${VANADIUM_PASSWORD}" && -d ${chromium_dir} ]]
 then
   cd "${chromium_dir}"
   [[ -f "args.gn" ]] || git clone https://github.com/GrapheneOS/Vanadium.git .
-  git_clean_repo
-  git config --global --add safe.directory "${chromium_dir}"
+  repo_safe_dir
+  git_clean_repo -c -d "${PWD}"
   git fetch --all --force --tags --prune --prune-tags
   git checkout main # TODO: add tags checkout functionality
   git pull --rebase -X ours "$(git remote)" "$(git branch --show-current)" # rebase on tags also? git describe --exact-match --tags
@@ -80,7 +80,7 @@ do
 
   # Reset GOS repo
   repo_safe_dir
-  git_clean_repo
+  git_clean_repo -c -d "${PWD}"
 
   # Sync GrapheneOS repo
   export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
@@ -242,16 +242,16 @@ done
 # Deep clean android and chromium src
 if [[ "${clean_repo}" == "1" ]]
 then
-  . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${android_top}"
+  git_clean_repo -cg -d "${android_top}"
   if [[ -d "${chromium_dir}/.git" ]]
   then
     git config --global --add safe.directory "${chromium_dir}"
-    . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${chromium_dir}"
+    git_clean_repo -cg -d "${chromium_dir}"
   fi
   if [[ -d "${chromium_dir}/src/.git" ]]
   then
     git config --global --add safe.directory "${chromium_dir}/src"
-    . "${BUILD_HOME}"/android/git_deep_clean.sh -cgx -d "${chromium_dir}/src"
+    git_clean_repo -cgx -d "${chromium_dir}/src"
   fi
 fi
 

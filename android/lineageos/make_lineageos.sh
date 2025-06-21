@@ -45,7 +45,7 @@ do
 
   # Sync LOS repo
   repo_safe_dir
-  git_clean_repo
+  git_clean_repo -c -d "${PWD}"
   repo init -u https://github.com/LineageOS/android.git -b lineage-"${android_version_number}" --git-lfs
   [[ "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
   repo_safe_dir
@@ -131,7 +131,7 @@ done
 # Deep clean android and chromium src
 if [[ "${clean_repo}" == "1" ]]
 then
-  . "${BUILD_HOME}"/android/git_deep_clean.sh -cg -d "${android_top}"
+  git_clean_repo -cg -d "${android_top}"
 fi
 
 exit 0

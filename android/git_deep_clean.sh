@@ -4,7 +4,10 @@ set -e
 
 clean=0
 prune=0
+xflag=""
 dir="$PWD"
+prune_since="2.weeks.ago"
+expire_since="30.days.ago"
 
 usage() {
   echo "Deep clean git or repo project"
@@ -13,7 +16,9 @@ usage() {
   echo "  Options:"
   echo "    -c Clean and reset source"
   echo "    -d target Directory"
+  echo "    -e Expire since date (default: '30.days.ago', use 'now' for aggressive)"
   echo "    -g git Gc and prune (caution: time-consuming)"
+  echo "    -p Prune since date (default: '2.weeks.ago', use 'now' for aggressive)"
   echo "    -x run git clean with -ffd + X"
   echo
   echo "  Example:"
@@ -23,11 +28,33 @@ usage() {
   exit 1
 }
 
-while getopts ":d:cgx" opt; do
+run_cmd() {
+  local cmd="$1"
+  if [[ ${REPO_PREFIX} ]]
+  then
+    echo "Running cmd: ${REPO_PREFIX} ${cmd}"
+    ${REPO_PREFIX} "${cmd}" &>/dev/null || true
+  else
+    echo "Running cmd: ${cmd}"
+    ${cmd} &>/dev/null || true
+  fi
+}
+
+run_cmd_with_submodules() {
+  local cmd="$1"
+
+  run_cmd "${cmd}"
+  run_cmd "git submodule foreach '${cmd}'"
+}
+
+OPTIND=1
+while getopts ":d:e:p:cgx" opt; do
   case $opt in
     c) clean=1 ;;
     d) dir=$OPTARG ;;
+    e) expire_since=$OPTARG ;;
     g) prune=1 ;;
+    p) prune_since=$OPTARG ;;
     x) xflag=x ;;
     \?) echo -e "Invalid option:-$OPTARG\n"
        usage ;;
@@ -37,78 +64,46 @@ shift $((OPTIND-1))
 
 # Reset source
 clean_src() {
-  rm -rf out releases ./*.zip
-  find . -type f -name "index.lock" -delete
-  echo -e "\nClean and Reset src in $dir"
+  echo -e "\nClean and Reset src"
 
-  for cmd in am cherry-pick merge rebase revert; do
-    echo "Running cmd: ${REPO_PREFIX} git $cmd --abort"
-    ${REPO_PREFIX} git "$cmd" --abort 2>/dev/null || true
-    echo "Running cmd: ${REPO_PREFIX} git submodule foreach git $cmd --abort"
-    ${REPO_PREFIX} git submodule foreach "git $cmd --abort" 2>/dev/null || true
+  for cmd in am cherry-pick rebase revert merge
+  do
+    run_cmd_with_submodules "git ${cmd} --abort"
   done
-
-  declare -a git_commands=(
-    "add --all"
-    "reset --hard"
-    "clean -ffd${xflag}"
-  )
-
-  for cmd in "${git_commands[@]}"; do
-    echo "Running cmd: ${REPO_PREFIX} git $cmd"
-    ${REPO_PREFIX} git "$cmd" || true
-    echo "Running cmd: ${REPO_PREFIX} git submodule foreach git $cmd"
-    ${REPO_PREFIX} git submodule foreach "git $cmd" 2>/dev/null || true
-  done
+  run_cmd_with_submodules "git bisect reset"
+  run_cmd_with_submodules "git add --all"
+  run_cmd_with_submodules "git reset --hard"
+  run_cmd_with_submodules "git clean -ffd${xflag}"
 }
 
 # Address loose object warnings; gc and prune
 prune_src() {
-  echo "Expire reflog and Prune src in $dir"
-  echo "Running cmd: ${REPO_PREFIX} git reflog expire --all --expire-unreachable=now"
-  ${REPO_PREFIX} git reflog expire --all --expire-unreachable=now || true
-  echo "Running cmd: ${REPO_PREFIX} git gc --aggressive --prune=now"
-  ${REPO_PREFIX} git gc --aggressive --prune=now || true
-  echo "Running cmd: ${REPO_PREFIX} git submodule foreach git reflog expire --all --expire-unreachable=now"
-  ${REPO_PREFIX} git submodule foreach "git reflog expire --all --expire-unreachable=now" || true
-  echo "Running cmd: ${REPO_PREFIX} git submodule foreach git gc --aggressive --prune=now"
-  ${REPO_PREFIX} git submodule foreach "git gc --aggressive --prune=now" || true
-}
+  echo -e "\nExpire reflog and Prune src in $dir"
 
-# Allow existing repo to work in container (will change some ownership to root)
-repo_safe_dir() {
-  if [[ -d "./.git" ]]
-  then
-    git config --global --add safe.directory "${PWD}"
-    # shellcheck disable=SC2046
-    for repository in $(dirname $(find . -type d -name .git -printf "%P\n")) 
-    do
-      git config --global --add safe.directory "${PWD}"/"${repository}"
-    done
-  elif [[ -d "./.repo" ]]
-  then
-    git config --global --add safe.directory "${PWD}/.repo/manifests"
-    git config --global --add safe.directory "${PWD}/.repo/repo"
-    for path in $(repo list -fp)
-    do
-      git config --global --add safe.directory "${path}"
-    done
-  fi
+  run_cmd_with_submodules "git stash clear"
+  run_cmd_with_submodules "git remote prune origin"
+  run_cmd_with_submodules "git worktree prune"
+  run_cmd_with_submodules "git lfs prune"
+  run_cmd_with_submodules "git for-each-ref --format=\"%(refname)\" refs/original/ | xargs -r -n 1 git update-ref -d"
+  run_cmd_with_submodules "git reflog expire --all --expire-unreachable=${expire_since}"
+  run_cmd_with_submodules "git gc --aggressive --prune=${prune_since}"
 }
 
 cd "$dir"
 
 if [[ -d "./.git" ]]
 then
-  echo "Git Project Detected"
+  echo "Git Project Detected in $dir"
 elif [[ -d "./.repo" ]]
 then
-  REPO_PREFIX="repo forall -c" && echo "Repo Project Detected"
+  REPO_PREFIX="repo forall -c" && echo "Repo Project Detected in $dir"
 else
   echo "Not a Git or Repo project. Nothing to do" && usage
 fi
 
-repo_safe_dir
 [[ "$clean" == "1" ]] && clean_src
 [[ "$prune" == "1" ]] && prune_src
+
+popd >/dev/null
+unset REPO_PREFIX clean dir prune prune_since expire_since xflag
 
