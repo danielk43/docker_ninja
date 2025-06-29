@@ -22,8 +22,7 @@ usage() {
   echo "    -x run git clean with -ffd + X"
   echo
   echo "  Example:"
-  echo "    $ cd /path/to/chromium/src"
-  echo "    $ ./clean-git-repo.sh -cgx"
+  echo "    $ ./clean-git-repo.sh -cgx -d /path/to/chromium/src"
   echo
   exit 1
 }
@@ -89,7 +88,7 @@ prune_src() {
   run_cmd_with_submodules "git gc --aggressive --prune=${prune_since}"
 }
 
-cd "$dir"
+pushd "$dir" >/dev/null
 
 if [[ -d "./.git" ]]
 then

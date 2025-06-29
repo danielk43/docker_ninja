@@ -27,8 +27,8 @@ git_clean_repo() {
 }
 
 sync_repo() {
-  cd .repo/repo && git pull --force
-  cd - >/dev/null
+  pushd .repo/repo >/dev/null && git pull --force
+  popd >/dev/null
   n=0 r="${retries}"
   set +e
   until [[ "${n}" -gt "${r}" ]]
@@ -144,10 +144,11 @@ fi
 export BUILD_HOME="${PWD}"
 
 # Update depot tools
-cd depot_tools && git pull origin main || true
+pushd depot_tools >/dev/null && git pull origin main || true
+popd >/dev/null
 
 # If android_version is not set, try to calculate platform and version
-cd "${android_top}"
+pushd "${android_top}" >/dev/null
 if [[ -n "${android_version}" ]]
 then
   android_platform=${android_version%%-*}

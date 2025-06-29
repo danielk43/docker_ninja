@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2034
-# shellcheck disable=SC2046
 # shellcheck disable=SC2154
 # shellcheck source=/dev/null
 
@@ -19,6 +17,7 @@ do
   echo "INFO: Building LineageOS-${android_version_number} for ${device}"
 
   # Setup key vars
+  # shellcheck disable=SC2034
   keys_password="KEYS_PASSWORD_${device^^}"
   device_keys="${keys_dir}/${device}"
 
@@ -85,6 +84,7 @@ do
     m target-files-package otatools
 
     # Sign build
+    # shellcheck disable=SC2046
     sign_target_files_apks -o -d "${device_keys}" $(extra_apks_args) \
     "${OUT}"/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip signed-target_files.zip
 

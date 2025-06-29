@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
-# shellcheck disable=SC2015
-# shellcheck disable=SC2046
-# shellcheck disable=SC2086
 # shellcheck disable=SC2154
-# shellcheck disable=SC2206
 # shellcheck source=/dev/null
 
 set -eo pipefail
@@ -19,7 +15,11 @@ do
                    husky akita tokay caiman komodo comet tegu devon hawao rhode fogos fogo bangkk FP4 FP5)
   for calyxos6_device in "${calyxos6_devices[@]}"
   do
-    [[ "${device}" == "${calyxos6_device}" ]] && export calyx_version_major="6" && break || true
+    if [[ "${device}" == "${calyxos6_device}" ]]
+    then
+      calyx_version_major="6"
+      export calyx_version_major && break
+    fi
   done
   [[ -z "${calyx_version_major}" ]] && echo "FATAL: Device ${device} not supported by CalyxOS" && usage
   echo "INFO: Building CalyxOS ${calyx_version_major} for ${device}"
@@ -59,6 +59,7 @@ do
   # Build OS
   combo="${device} ${variant}"
   echo "INFO: Breakfast combo: ${combo}"
+  # shellcheck disable=SC2086
   breakfast ${combo}
 
   # Create outfile directory
@@ -81,10 +82,16 @@ do
     # Generate signing keys
     if [[ ! -d "${common_keys}" || ! -d "${device_keys}" ]]
     then
-      cd "${otatools_dir}"
-      [[ ! -d "${common_keys}" ]] && yes "" | "${android_top}"/vendor/calyx/scripts/mkcommonkeys.sh "${common_keys}" "${android_dname}" || true
-      [[ ! -d "${device_keys}" ]] && yes "" | "${android_top}"/vendor/calyx/scripts/mkkeys.sh "${device_keys}" "${android_dname}" || true
-      cd "${android_top}"
+      pushd "${otatools_dir}" >/dev/null
+      if [[ ! -d "${common_keys}" ]]
+      then
+        yes "" | "${android_top}"/vendor/calyx/scripts/mkcommonkeys.sh "${common_keys}" "${android_dname}" || true
+      fi
+      if [[ ! -d "${device_keys}" ]]
+      then
+        yes "" | "${android_top}"/vendor/calyx/scripts/mkkeys.sh "${device_keys}" "${android_dname}" || true
+      fi
+      popd >/dev/null
     fi
 
     # Link keys (containerized link will not be found on host)
@@ -120,12 +127,12 @@ do
     # Sign and Release build
     ln -s "${android_top}"/build "${otatools_dir}"/build
     cp -f "${OUT}"/obj/PACKAGING/target_files_intermediates/calyx_"${device}"-target_files*.zip "${otatools_dir}"
-    cd "${otatools_dir}"
+    pushd "${otatools_dir}" >/dev/null
     bash "${android_top}"/vendor/calyx/scripts/release.sh "${device}" calyx_"${device}"-target_files*.zip
     python "${android_top}"/vendor/calyx/scripts/generate_metadata.py out/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-ota_update-"${BUILD_NUMBER}".zip
     mv "${device}"-testing out/release-"${device}"-"${BUILD_NUMBER}"
     mv -f out/release-"${device}"-"${BUILD_NUMBER}" "${device_out}"
-    cd "${android_top}"
+    popd >/dev/null
   else
     m
     mkdir -p "${device_out}"/flashall 2>/dev/null || true

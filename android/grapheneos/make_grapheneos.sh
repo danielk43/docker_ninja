@@ -12,7 +12,7 @@ set -eo pipefail
 # Build Vanadium once, outside of devices loop
 if [[ -n "${VANADIUM_PASSWORD}" && -d ${chromium_dir} ]]
 then
-  cd "${chromium_dir}"
+  pushd "${chromium_dir}" >/dev/null
   [[ -f "args.gn" ]] || git clone https://github.com/GrapheneOS/Vanadium.git .
   repo_safe_dir
   git_clean_repo -c -d "${PWD}"
@@ -28,21 +28,22 @@ then
     -keyalg RSA -keysize 4096 -sigalg SHA512withRSA -validity 10000 -dname "${chromium_dname}"
   fi
 
-  keystore_sha=$(echo "${VANADIUM_PASSWORD}" | keytool -export-cert -alias vanadium -keystore vanadium.keystore | sha256sum | awk '{print $1}')
+  keystore_sha=$(echo "${VANADIUM_PASSWORD}" | \
+    keytool -export-cert -alias vanadium -keystore vanadium.keystore 2>/dev/null | \
+    sha256sum | \
+    awk '{print $1}')
   sed -i "s/certdigest.*/certdigest = \"${keystore_sha}\"/" args.gn
 
   [[ ! -d src ]] && fetch --nohooks android
-  cd src
-  git config --global --add safe.directory "${PWD}" \
-  && for repository in $(dirname $(find . -type d -name .git -printf "%P\n"))
-  do
-    git config --global --add safe.directory "${PWD}"/"${repository}"
-  done
-  . "${BUILD_HOME}"/android/git_deep_clean.sh -cx -d "${PWD}" || true
+  pushd src >/dev/null
+  repo_safe_dir
+  git_clean_repo -cx -d "${PWD}"
   git fetch --all --force --tags --prune --prune-tags
   git checkout --force "${vanadium_current_version}"
   git am --whitespace=nowarn --keep-non-patch "${chromium_dir}"/patches/*.patch
-  cd "${chromium_dir}" && gclient sync -D --with_branch_heads --with_tags --jobs "${sync_jobs}" && cd src
+  popd >/dev/null
+  gclient sync -D --with_branch_heads --with_tags --jobs "${sync_jobs}"
+  pushd src >/dev/null
   mkdir -p out/Default
   cp -fp "${chromium_dir}"/args.gn out/Default
   gn gen out/Default
@@ -52,7 +53,8 @@ then
   trichrome_chrome_64_32_apk trichrome_library_64_32_apk vanadium_config_apk
 
   echo "${VANADIUM_PASSWORD}" | "${chromium_dir}"/generate-release out
-  cd "${android_top}"
+  popd >/dev/null
+  popd >/dev/null
 fi
 
 # Initialize Device Builds
@@ -91,12 +93,12 @@ do
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${release_tag}"
     mkdir ~/.ssh 2>/dev/null || true
     curl -sL https://grapheneos.org/allowed_signers -o ~/.ssh/grapheneos_allowed_signers
-    cd .repo/manifests
+    pushd .repo/manifests >/dev/null
     git config gpg.ssh.allowedSignersFile ~/.ssh/grapheneos_allowed_signers
     git verify-tag "$(git describe)" || (echo "FATAL: GrapheneOS tag verification failed" && exit 1)
     popd >/dev/null
   else
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 15-qpr2
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 16
   fi
   repo_safe_dir
   sync_repo
@@ -116,7 +118,7 @@ do
 
   # Build kernel
   [[ -z "${kernel_dir}" ]] && echo "FATAL: GrapheneOS Kernel directory missing" && usage
-  cd "${kernel_dir}"
+  pushd "${kernel_dir}" >/dev/null
   # 6th through 9th gen
   if grep -q "${device}" <<< "tegu comet komodo caiman tokay husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
   then
@@ -137,15 +139,16 @@ do
       codename=${device}
     fi
     mkdir "${kernel}" 2>/dev/null || true
-    cd "${kernel}"
+    pushd "${kernel}" >/dev/null
     repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 15-qpr2
-    git_clean_repo
+    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 16
+    git_clean_repo -c -d "${PWD}"
     sync_repo
-    ./build_"${codename}".sh --config=no_download_gki --config=no_download_gki_fips140 --lto=full
+    ./build_"${codename}".sh --lto=full
     cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
+    popd >/dev/null
   fi
-  cd "${android_top}"
+  popd >/dev/null
 
   # Extract vendor files
   if [[ "${persist_vendor}" == "0" ]]
@@ -175,7 +178,7 @@ do
 
   # Initialize device build
   tag_regex="${grapheneos_latest_tag}|^dev$|^development$"
-  if [[ "${grapheneos_tag,,}" =~ ${tag_regex} || -z "${grapheneos_tag}" ]] && ! grep -q "${device}" <<< "coral flame sunfish"
+  if [[ "${grapheneos_tag,,}" =~ ${tag_regex} || -z "${grapheneos_tag}" ]]
   then
     build_id=$(grep "(BUILD_ID)" vendor/google_devices/"${device}"/"${device}".mk | head -n1 | cut -d, -f2 | tr -d \))
     export build_id
@@ -223,14 +226,13 @@ EOF
   # Copy artifacts to out dir
   if [[ "${out_dir}" != "${ANDROID_BUILD_TOP}/releases" ]]
   then
-    grep -q "${device}" <<< "coral flame sunfish" && installer=factory || installer=install
-    for pkg in ${installer} ota_update
+    for pkg in install ota_update
     do
       mv releases/"${BUILD_NUMBER}"/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-"${pkg}"-"${BUILD_NUMBER}".zip \
       "${out_dir}"/"${device}"/"${BUILD_NUMBER}"/"${device}"-"${pkg}"-"${BUILD_NUMBER}".zip
     done
     mv releases/"${BUILD_NUMBER}"/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-"${installer}"-"${BUILD_NUMBER}".zip.sig \
-    "${out_dir}"/"${device}"/"${BUILD_NUMBER}"/"${device}"-"${installer}"-"${BUILD_NUMBER}".zip.sig
+    "${out_dir}"/"${device}"/"${BUILD_NUMBER}"/"${device}"-install-"${BUILD_NUMBER}".zip.sig
   fi
 
   # Remove device-specific settings

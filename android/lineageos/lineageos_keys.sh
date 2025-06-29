@@ -24,7 +24,7 @@ export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.
                           com.google.pixel.vibrator.hal com.qorvo.uwb)
 
 make_lineageos_keys() {
-  cd "${device_keys}" || exit
+  pushd "${device_keys}" >/dev/null || exit
   sed -i "s/2048/4096/g" "${MAKE_KEY}" # use SHA256_RSA4096
   if test -n "$(find . -maxdepth 0 -empty)"
   then
@@ -51,7 +51,7 @@ make_lineageos_keys() {
     echo "INFO: ${device_keys} not empty, skipping keygen"
   fi
   [[ -f "${device_keys}/pw_file" ]] && export ANDROID_PW_FILE="${device_keys}/pw_file"
-  cd "${android_top}" || exit
+  popd >/dev/null || exit
 }
 
 extra_apks_args() {

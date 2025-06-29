@@ -5,7 +5,7 @@
 export GRAPHENEOS_SIGNING_KEYS=(bluetooth media networkstack platform releasekey sdk_sandbox shared)
 
 make_grapheneos_keys() {
-  cd "${device_keys}" || exit
+  pushd "${device_keys}" >/dev/null || exit
   if test -n "$(find . -maxdepth 0 -empty)"
   then
     for key in "${GRAPHENEOS_SIGNING_KEYS[@]}"
@@ -32,6 +32,6 @@ EOF
   else
     echo "INFO: ${device_keys} not empty, skipping keygen"
   fi
-  cd "${android_top}" || exit
+  popd >/dev/null || exit
 }
 
