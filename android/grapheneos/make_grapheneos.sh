@@ -231,7 +231,7 @@ EOF
       mv releases/"${BUILD_NUMBER}"/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-"${pkg}"-"${BUILD_NUMBER}".zip \
       "${out_dir}"/"${device}"/"${BUILD_NUMBER}"/"${device}"-"${pkg}"-"${BUILD_NUMBER}".zip
     done
-    mv releases/"${BUILD_NUMBER}"/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-"${installer}"-"${BUILD_NUMBER}".zip.sig \
+    mv releases/"${BUILD_NUMBER}"/release-"${device}"-"${BUILD_NUMBER}"/"${device}"-install-"${BUILD_NUMBER}".zip.sig \
     "${out_dir}"/"${device}"/"${BUILD_NUMBER}"/"${device}"-install-"${BUILD_NUMBER}".zip.sig
   fi
 
