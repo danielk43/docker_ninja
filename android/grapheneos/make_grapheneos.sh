@@ -157,7 +157,7 @@ do
     rm -rf vendor/adevtool/node_modules
     yarnpkg install --cwd vendor/adevtool
     lunch sdk_phone64_x86_64-cur-user
-    m aapt2
+    m arsclib
     rm -rf vendor/google_devices/*
     vendor/adevtool/bin/run generate-all -d "${device}"
   fi
