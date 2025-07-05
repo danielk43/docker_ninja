@@ -5,6 +5,12 @@
 
 set -eo pipefail
 
+# Determine Build Ref
+export latest_tag_cmd="https://gitlab.com/api/v4/projects/8459465/repository/tags \
+                       | jq -r '[.[] | select(.name | match(\"^${calyx_version_major}.\")).name][0]'"
+repo_safe_dir
+repo_init_ref
+
 # Initialize Device Builds
 for device in ${devices}
 do
@@ -24,19 +30,13 @@ do
   [[ -z "${calyx_version_major}" ]] && echo "FATAL: Device ${device} not supported by CalyxOS" && usage
   echo "INFO: Building CalyxOS ${calyx_version_major} for ${device}"
 
-  # Reset COS repo
-  repo_safe_dir
-  git_clean_repo -c -d "${PWD}"
-
   # Set Variables
   export device_out="${out_dir}"/"${device}"/"${build_date}"
   export otatools_dir="${android_top}"/out/host/linux-x86
-  export latest_tag_cmd="https://gitlab.com/api/v4/projects/8459465/repository/tags \
-                         | jq -r '[.[] | select(.name | match(\"^${calyx_version_major}.\")).name][0]'"
   export RELAX_USES_LIBRARY_CHECK="true"
 
   # Sync CalyxOS repo
-  repo_init_ref
+  git_clean_repo -c -d "${PWD}"
   [[ "${release_tag}" =~ ^dev|^$ ]] && release_tag="android${android_version_number%.*}"
   if [[ "${release_tag}" =~ ^${calyx_version_major}. ]]
   then
@@ -44,7 +44,6 @@ do
   else
     repo init -u https://gitlab.com/CalyxOS/platform_manifest -b "${release_tag}" --git-lfs
   fi
-  repo_safe_dir
   sync_repo
   source build/envsetup.sh
 

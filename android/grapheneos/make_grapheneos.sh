@@ -57,6 +57,12 @@ then
   popd >/dev/null
 fi
 
+# Determine Build Ref
+export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
+                      '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
+repo_safe_dir
+repo_init_ref
+
 # Initialize Device Builds
 for device in ${devices}
 do
@@ -80,14 +86,9 @@ do
     ln -s "${device_keys}" "${android_top}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys failed"
   fi
 
-  # Reset GOS repo
-  repo_safe_dir
+  # Sync GrapheneOS repo
   git_clean_repo -c -d "${PWD}"
 
-  # Sync GrapheneOS repo
-  export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
-                        '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
-  repo_init_ref
   if [[ ! "${release_tag}" =~ ^dev|^$ ]]
   then
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${release_tag}"
@@ -100,7 +101,6 @@ do
   else
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 16
   fi
-  repo_safe_dir
   sync_repo
   source build/envsetup.sh >/dev/null
 

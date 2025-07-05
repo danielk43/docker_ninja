@@ -66,7 +66,7 @@ repo_safe_dir() {
 repo_init_ref() {
   if [[ "${release_tag,,}" == "latest" && -z "${release_latest_tag}" ]]
   then
-    release_latest_tag="$(eval "curl -sL ${latest_tag_cmd}")"
+    release_latest_tag="$(eval "curl -fsSL ${latest_tag_cmd}")"
     release_tag=${release_latest_tag}
   fi
   if [[ ! "${release_tag}" =~ (^[[:digit:]]{8,10}$|^${calyxos_version_major}.|^dev|^$) ]]

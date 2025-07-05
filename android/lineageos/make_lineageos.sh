@@ -5,6 +5,8 @@
 
 set -eo pipefail
 
+repo_safe_dir
+
 # Initialize signing keys
 . "${build_path}"/"${android_platform}"_keys.sh
 
@@ -43,11 +45,9 @@ do
   mkdir -p "${out_dir}"/"${device}"/"${build_date}" 2>/dev/null || true
 
   # Sync LOS repo
-  repo_safe_dir
   git_clean_repo -c -d "${PWD}"
   repo init -u https://github.com/LineageOS/android.git -b lineage-"${android_version_number}" --git-lfs
   [[ "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
-  repo_safe_dir
   sync_repo
   source build/envsetup.sh
 
