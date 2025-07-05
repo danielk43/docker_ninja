@@ -244,17 +244,18 @@ done
 # Deep clean android and chromium src
 if [[ "${clean_repo}" == "1" ]]
 then
-  git_clean_repo -cg -d "${android_top}"
+  git_clean_repo -cg -d "${android_top}" -e "${expire_since}" -p "${prune_since}"
   if [[ -d "${chromium_dir}/.git" ]]
   then
     git config --global --add safe.directory "${chromium_dir}"
-    git_clean_repo -cg -d "${chromium_dir}"
+    git_clean_repo -cg -d "${chromium_dir}" -e "${expire_since}" -p "${prune_since}"
   fi
   if [[ -d "${chromium_dir}/src/.git" ]]
   then
     git config --global --add safe.directory "${chromium_dir}/src"
-    git_clean_repo -cgx -d "${chromium_dir}/src"
+    git_clean_repo -cgx -d "${chromium_dir}/src" -e "${expire_since}" -p "${prune_since}"
   fi
+  echo "INFO: Repo clean complete"
 fi
 
 exit 0

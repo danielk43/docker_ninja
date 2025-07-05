@@ -131,7 +131,8 @@ done
 # Deep clean android and chromium src
 if [[ "${clean_repo}" == "1" ]]
 then
-  git_clean_repo -cg -d "${android_top}"
+  git_clean_repo -cg -d "${android_top}" -e "${expire_since}" -p "${prune_since}"
+  echo "INFO: Repo clean complete"
 fi
 
 exit 0
