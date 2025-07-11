@@ -23,7 +23,7 @@ ccache_init() {
 git_clean_repo() {
   rm -rf ./out ./releases ./*.zip ./bazel-*
   find . -type f -name "index.lock" -delete
-  . "${BUILD_HOME}"/android/git_deep_clean.sh "$@" -p "${prune_since}" -e "${expire_since}" || true
+  "${BUILD_HOME}"/android/git_deep_clean.sh "$@" || true
 }
 
 sync_repo() {

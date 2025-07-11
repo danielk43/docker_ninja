@@ -63,7 +63,7 @@ shift $((OPTIND-1))
 
 # Reset source
 clean_src() {
-  echo -e "\nClean and Reset src"
+  echo -e "\nClean and Reset src in ${dir}"
 
   for cmd in am cherry-pick rebase revert merge
   do
@@ -77,7 +77,7 @@ clean_src() {
 
 # Address loose object warnings; gc and prune
 prune_src() {
-  echo -e "\nExpire reflog and Prune src in $dir"
+  echo -e "\nExpire reflog and Prune src in ${dir}"
 
   run_cmd_with_submodules "git stash clear"
   run_cmd_with_submodules "git remote prune origin"
@@ -88,14 +88,14 @@ prune_src() {
   run_cmd_with_submodules "git gc --aggressive --prune=${prune_since}"
 }
 
-pushd "$dir" >/dev/null
+pushd "${dir}" >/dev/null
 
 if [[ -d "./.git" ]]
 then
-  echo "Git Project Detected in $dir"
+  echo "Git Project Detected"
 elif [[ -d "./.repo" ]]
 then
-  REPO_PREFIX="repo forall -c" && echo "Repo Project Detected in $dir"
+  REPO_PREFIX="repo forall -c" && echo "Repo Project Detected"
 else
   echo "Not a Git or Repo project. Nothing to do" && usage
 fi
