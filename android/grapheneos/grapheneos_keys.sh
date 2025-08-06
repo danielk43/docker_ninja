@@ -5,6 +5,7 @@
 export GRAPHENEOS_SIGNING_KEYS=(bluetooth media networkstack platform releasekey sdk_sandbox shared)
 
 make_grapheneos_keys() {
+  mkdir "${device_keys}" 2>/dev/null || true
   pushd "${device_keys}" >/dev/null || exit
   if test -n "$(find . -maxdepth 0 -empty)"
   then

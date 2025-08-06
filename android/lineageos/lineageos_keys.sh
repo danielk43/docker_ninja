@@ -24,6 +24,7 @@ export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.
                           com.google.pixel.vibrator.hal com.qorvo.uwb)
 
 make_lineageos_keys() {
+  mkdir "${device_keys}" 2>/dev/null || true
   pushd "${device_keys}" >/dev/null || exit
   sed -i "s/2048/4096/g" "${MAKE_KEY}" # use SHA256_RSA4096
   if test -n "$(find . -maxdepth 0 -empty)"
