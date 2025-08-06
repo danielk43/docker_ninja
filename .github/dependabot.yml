@@ -1,10 +1,14 @@
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/"
+    directory: "/.github/actions/docker-init"
     schedule:
       interval: "daily"
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/android"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "docker"
+    directory: "/cmake"
     schedule:
       interval: "daily"

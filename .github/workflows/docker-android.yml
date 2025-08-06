@@ -51,6 +51,6 @@ jobs:
         uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
         with:
           context: android
-          push: ${{ github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull')  && github.actor != 'dependabot[bot]' }}
+          push: ${{ github.event_name != 'pull_request' && !startsWith(github.ref, 'refs/pull') && github.actor != 'dependabot[bot]' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
