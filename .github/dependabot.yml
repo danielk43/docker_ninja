@@ -4,7 +4,15 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+  - package-ecosystem: "github-actions"
+    directory: "/.github/actions/docker-init"
+    schedule:
+      interval: "daily"
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/android"
+    schedule:
+      interval: "daily"
+  - package-ecosystem: "docker"
+    directory: "/cmake"
     schedule:
       interval: "daily"
