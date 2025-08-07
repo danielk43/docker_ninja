@@ -211,7 +211,7 @@ do
     spawn script/generate-release.sh "${device}" "${BUILD_NUMBER}"
     expect "Enter key passphrase"
     send -- "${!keys_password}\r"
-    expect "Enter passphrase"
+    expect "Enter pass phrase"
     send -- "${!keys_password}\r"
     expect eof
 EOF
