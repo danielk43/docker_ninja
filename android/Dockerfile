@@ -1,4 +1,4 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
 ARG HOME=/android_build
@@ -42,14 +42,14 @@ RUN apt update \
  && curl -L https://deb.nodesource.com/setup_"$NODEJS_VERSION".x | bash \
  && curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | \
     gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg \
- && echo "deb https://packages.adoptium.net/artifactory/deb bookworm main" | \
+ && echo "deb https://packages.adoptium.net/artifactory/deb trixie main" | \
     tee /etc/apt/sources.list.d/adoptium.list \
  && apt update \
  && apt install -y bc binutils bison build-essential ccache cgpt expect file flex git-lfs gperf \
     imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
-    libkrb5-dev liblz4-tool libncurses5 libncurses5-dev libnss3-dev libsdl1.2-dev libssl-dev \
-    libxml2 libxml2-utils lz4 lzop m4 nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush \
-    python-is-python3 python3-pip rsync schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
+    libkrb5-dev liblz4-dev libnss3-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lz4 lzop m4 \
+    nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush python-is-python3 python3-pip rsync \
+    schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
  && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
