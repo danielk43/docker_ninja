@@ -45,8 +45,8 @@ RUN apt update \
  && echo "deb https://packages.adoptium.net/artifactory/deb trixie main" | \
     tee /etc/apt/sources.list.d/adoptium.list \
  && apt update \
- && apt install -y bc binutils bison build-essential ccache cgpt expect file flex git-lfs gperf \
-    imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
+ && apt install -y bc binutils bison build-essential ccache cgpt e2fsprogs expect file flex git-lfs \
+    gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
     libkrb5-dev liblz4-dev libnss3-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lz4 lzop m4 \
     nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush python-is-python3 python3-pip rsync \
     schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
