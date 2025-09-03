@@ -37,19 +37,13 @@ ENV USER_SCRIPTS=""
 
 RUN apt update \
  && apt -y upgrade \
- && apt -y install curl git-core \
+ && apt -y install curl git-core zip \
  && curl -L https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash \
  && curl -L https://deb.nodesource.com/setup_"$NODEJS_VERSION".x | bash \
  && curl -fsSL https://packages.adoptium.net/artifactory/api/gpg/key/public | \
     gpg --dearmor | tee /etc/apt/trusted.gpg.d/adoptium.gpg \
  && echo "deb https://packages.adoptium.net/artifactory/deb trixie main" | \
     tee /etc/apt/sources.list.d/adoptium.list \
- && apt update \
- && apt install -y bc binutils bison build-essential ccache cgpt e2fsprogs expect file flex git-lfs \
-    gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
-    libkrb5-dev liblz4-dev libnss3-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lz4 lzop m4 \
-    nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush python-is-python3 python3-pip rsync \
-    schedtool squashfs-tools wget xsltproc xxd zip zlib1g-dev \
  && curl -LO https://dl.google.com/android/repository/platform-tools-latest-linux.zip \
  && unzip platform-tools-latest-linux.zip \
  && git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git \
@@ -60,6 +54,12 @@ RUN apt update \
   | grep "browser_download_url.*linux-x86_64.zip" | cut -d\" -f4) \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
+ && apt update \
+ && apt install -y bc binutils bison build-essential ccache cgpt e2fsprogs expect file flex git-lfs \
+    gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
+    libkrb5-dev liblz4-dev libnss3-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lz4 lzop m4 \
+    nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush python-is-python3 python3-pip rsync \
+    schedtool squashfs-tools wget xsltproc xxd zlib1g-dev \
  && pip3 install --break-system-packages --no-cache-dir lxml protobuf pyyaml \
  && apt -y autoremove \
  && apt -y clean \
