@@ -1,7 +1,7 @@
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 
 ARG DEBIAN_FRONTEND=noninteractive
-ARG LLVM_VERSION=20
+ARG LLVM_VERSION=21
 
 ENV LLVM_VERSION=$LLVM_VERSION
 
@@ -12,8 +12,8 @@ RUN mkdir -p bin \
  && apt -y upgrade \
  && apt -y install curl tar zip \
  && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key -o /usr/share/keyrings/llvm-snapshot.gpg.key \
- && echo "deb [signed-by=/usr/share/keyrings/llvm-snapshot.gpg.key] https://apt.llvm.org/bookworm/\
- llvm-toolchain-bookworm-$LLVM_VERSION main" | tee -a /etc/apt/sources.list.d/llvm.list \
+ && echo "deb [signed-by=/usr/share/keyrings/llvm-snapshot.gpg.key] https://apt.llvm.org/trixie/\
+ llvm-toolchain-trixie-$LLVM_VERSION main" | tee -a /etc/apt/sources.list.d/llvm.list \
  && echo 'alias ll="ls -alF"' >> /root/.bashrc \
  && apt update \
  && apt install -y autoconf autoconf-archive automake build-essential ccache \
