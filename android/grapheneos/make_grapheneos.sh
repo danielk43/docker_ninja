@@ -120,34 +120,30 @@ do
   [[ -z "${kernel_dir}" ]] && echo "FATAL: GrapheneOS Kernel directory missing" && usage
   pushd "${kernel_dir}" >/dev/null
   # 6th through 9th gen
-  if grep -q "${device}" <<< "tegu comet komodo caiman tokay husky shiba akita cheetah panther lynx tangorpro felix raven oriole bluejay"
+  if grep -q "${device}" <<< "komodo caiman tokay"
   then
-    kernel=pixel
-    if grep -q "${device}" <<< "komodo caiman tokay"
-    then
-      codename=caimoto
-    elif grep -q "${device}" <<< "husky shiba"
-    then
-      codename=shusky
-    elif grep -q "${device}" <<< "cheetah panther"
-    then
-      codename=pantah
-    elif grep -q "${device}" <<< "raven oriole"
-    then
-      codename=raviole
-    else
-      codename=${device}
-    fi
-    mkdir "${kernel}" 2>/dev/null || true
-    pushd "${kernel}" >/dev/null
-    repo_safe_dir
-    repo init -u https://github.com/GrapheneOS/kernel_manifest-"${kernel}".git -b 16
-    git_clean_repo -c -d "${PWD}"
-    sync_repo
-    ./build_"${codename}".sh --lto=full
-    cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
-    popd >/dev/null
+    codename=caimoto
+  elif grep -q "${device}" <<< "husky shiba"
+  then
+    codename=shusky
+  elif grep -q "${device}" <<< "cheetah panther"
+  then
+    codename=pantah
+  elif grep -q "${device}" <<< "raven oriole"
+  then
+    codename=raviole
+  else
+    codename=${device}
   fi
+  git clone https://gitlab.com/grapheneos/kernel_pixel.git -b 16-qpr1 --recurse-submodules 2>/dev/null || true
+  pushd kernel_pixel >/dev/null
+  repo_safe_dir
+  git_clean_repo -c -d "${PWD}"
+  git pull --force
+  git submodule update --init --recursive
+  KLEAF_REPO_MANIFEST=aosp_manifest.xml ./build_"${codename}".sh --lto=full
+  cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
+  popd >/dev/null
   popd >/dev/null
 
   # Extract vendor files
