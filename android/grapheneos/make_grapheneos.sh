@@ -120,6 +120,7 @@ do
   [[ -z "${kernel_dir}" ]] && echo "FATAL: GrapheneOS Kernel directory missing" && usage
   pushd "${kernel_dir}" >/dev/null
   # 6th through 9th gen
+  kernel_ref=16-qpr1
   if grep -q "${device}" <<< "komodo caiman tokay"
   then
     codename=caimoto
@@ -135,11 +136,14 @@ do
   else
     codename=${device}
   fi
-  git clone https://gitlab.com/grapheneos/kernel_pixel.git -b 16-qpr1 --recurse-submodules 2>/dev/null || true
+  git clone https://gitlab.com/grapheneos/kernel_pixel.git -b "${kernel_ref}" --recurse-submodules 2>/dev/null || true
   pushd kernel_pixel >/dev/null
-  repo_safe_dir
+  # repo_safe_dir # Fix ownership to prevent git errors in Bazel sandbox
+  chown -R "$(id -u):$(id -g)" "${PWD}"
   git_clean_repo -c -d "${PWD}"
-  git pull --force
+  git fetch --all --force --tags --prune --prune-tags
+  git checkout --force "${kernel_ref}"
+  git pull --rebase
   git submodule update --init --recursive
   KLEAF_REPO_MANIFEST=aosp_manifest.xml ./build_"${codename}".sh --lto=full
   cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*

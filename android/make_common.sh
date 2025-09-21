@@ -48,9 +48,9 @@ repo_safe_dir() {
   then
     git config --global --add safe.directory "${PWD}"
     # shellcheck disable=SC2046
-    for repository in $(dirname $(find . -type d -name .git -printf "%P\n"))
+    for repository in $(dirname $(find . -mindepth 2 -name .git -printf "%P\n"))
     do
-      git config --global --add safe.directory "${PWD}"/"${repository}"
+      git config --global --add safe.directory "${PWD}/${repository}"
     done
   elif [[ -d "./.repo" ]]
   then
@@ -181,5 +181,5 @@ export AVB_TOOL="${android_top}/external/avb/avbtool.py"
 export MAKE_KEY="${android_top}/development/tools/make_key"
 
 [[ -n "${devices}" ]] && echo "INFO: Device list: ${devices}"
-. "${build_path}"/make_"${android_platform}".sh 
+. "${build_path}"/make_"${android_platform}".sh
 
