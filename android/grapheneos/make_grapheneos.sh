@@ -142,8 +142,12 @@ do
   chown -R "$(id -u):$(id -g)" "${PWD}"
   git_clean_repo -c -d "${PWD}"
   git fetch --all --force --tags --prune --prune-tags
-  git checkout --force "${kernel_ref}"
-  git pull --rebase
+  if [[ ! "${release_tag}" =~ ^dev|^$ ]]
+  then
+    git checkout --force "${release_tag}"
+  else
+    git checkout --force "${kernel_ref}"
+  fi
   git submodule update --init --recursive
   KLEAF_REPO_MANIFEST=aosp_manifest.xml ./build_"${codename}".sh --lto=full
   cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
