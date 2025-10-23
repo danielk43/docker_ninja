@@ -2,17 +2,22 @@
 
 # shellcheck disable=SC2154
 
-export GRAPHENEOS_SIGNING_KEYS=(bluetooth media networkstack platform releasekey sdk_sandbox shared)
+export GRAPHENEOS_SIGNING_KEYS=(bluetooth gmscompat_lib media networkstack platform releasekey sdk_sandbox shared)
 
 make_grapheneos_keys() {
   mkdir "${device_keys}" 2>/dev/null || true
   pushd "${device_keys}" >/dev/null || exit
-  if test -n "$(find . -maxdepth 0 -empty)"
+
+  for key in "${GRAPHENEOS_SIGNING_KEYS[@]}"
+  do
+    if [[ ! -f "${key}.pk8" ]]
+    then
+      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" &>/dev/null || echo "creating ${key}.pk8"
+    fi
+  done
+
+  if [[ ! -f avb.pem ]]
   then
-    for key in "${GRAPHENEOS_SIGNING_KEYS[@]}"
-    do
-      echo "${!keys_password}" | "${MAKE_KEY}" "${key}" "${android_dname}" >/dev/null 2>&1 || echo "creating ${key}.pk8"
-    done
     openssl genrsa 4096 | openssl pkcs8 -topk8 -scrypt -passout pass:"${!keys_password}" -out avb.pem >/dev/null
     expect << EOF
       set timeout -1
@@ -21,6 +26,10 @@ make_grapheneos_keys() {
       send -- "${!keys_password}\r"
       expect eof
 EOF
+  fi
+
+  if [[ ! -f id_ed25519 ]]
+  then
     expect << EOF
       set timeout -1
       spawn ssh-keygen -t ed25519 -f id_ed25519
@@ -30,9 +39,8 @@ EOF
       send -- "${!keys_password}\r"
       expect eof
 EOF
-  else
-    echo "INFO: ${device_keys} not empty, skipping keygen"
   fi
+
   popd >/dev/null || exit
 }
 
