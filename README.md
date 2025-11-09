@@ -1,6 +1,6 @@
 # docker_ninja
 ## build
-Build Android OS images noninteractively  
+Build Android OS images noninteractively
 
 ### Docker
 ```
@@ -75,10 +75,10 @@ docker run --rm \
 -e "BUILD_VARIANT=user" \
 -e "CCACHE_SIZE=100G" \
 -e "CLEAN_REPO=true" \
--e "DELETE_ROOMSERVICE=true" \ # Remove previous dependencies, default false (Optional)
 -e "DEVICES=barbet" \
 -e "GMS_MAKEFILE=gms_extras.mk" \ # Also sets WITH_GMS=true (Optional)
 -e "PRINT_ENV=true" \
+-e "ROOMSERVICE=false" \ # Use local dep manifest, default true (Optional)
 -e "SIGN_BUILD=true" \
 -e "SYNC_JOBS=8" \
 -e "SYNC_RETRIES=10" \

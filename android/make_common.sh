@@ -33,7 +33,7 @@ sync_repo() {
   set +e
   until [[ "${n}" -gt "${r}" ]]
   do
-    repo sync --force-sync -j"${sync_jobs}" && break # only needed for pre-lfs existing repos
+    repo sync --detach --force-sync -j"${sync_jobs}" && break # only needed for pre-lfs existing repos
     n=$((n+1))
     sleep 3
     [[ "${n}" -le "${r}" ]] && echo "WARN: repo sync failed, retry ${n} of ${r}"
@@ -83,9 +83,7 @@ print_env() {
 }
 
 build_date=$(TZ=UTC date +%Y%m%d)
-sync_jobs=$(nproc)
 export build_date
-export sync_jobs
 
 export android_dname="/CN=Android/"
 export chromium_dname="CN=Chromium"
@@ -98,6 +96,7 @@ export prune_since="2.weeks.ago"
 export retries=5
 export roomservice=0
 export sign_build=0
+export sync_jobs=8
 export variant="userdebug"
 export release_tag="dev"
 
@@ -116,11 +115,11 @@ export release_tag="dev"
 [[ -n "${SYNC_JOBS}" ]] && export sync_jobs=${SYNC_JOBS}
 [[ -n "${SYNC_RETRIES}" ]] && export retries=${SYNC_RETRIES}
 [[ -n "${USER_SCRIPTS}" ]] && export user_scripts=${USER_SCRIPTS}
-[[ -n "${DELETE_ROOMSERVICE}" && "${DELETE_ROOMSERVICE}" != "false" ]] && export roomservice=1
-[[ -n "${PERSIST_VENDOR}" && "${PERSIST_VENDOR}" != "false" ]] && export persist_vendor=1
-[[ -n "${CLEAN_REPO}" && "${CLEAN_REPO}" != "false" ]] && export clean_repo=1
-[[ -n "${SIGN_BUILD}" && "${SIGN_BUILD}" != "false" ]] && export sign_build=1
-[[ -n "${PRINT_ENV}" && "${PRINT_ENV}" != "false" ]] && export print_env=1
+[[ -n "${ROOMSERVICE}" && "${ROOMSERVICE}" == "true" ]] && export roomservice=1
+[[ -n "${PERSIST_VENDOR}" && "${PERSIST_VENDOR}" == "true" ]] && export persist_vendor=1
+[[ -n "${CLEAN_REPO}" && "${CLEAN_REPO}" == "true" ]] && export clean_repo=1
+[[ -n "${SIGN_BUILD}" && "${SIGN_BUILD}" == "true" ]] && export sign_build=1
+[[ -n "${PRINT_ENV}" && "${PRINT_ENV}" == "true" ]] && export print_env=1
 
 export android_top=/android_build/src
 export keys_dir=/android_build/keys
@@ -172,11 +171,11 @@ fi
 [[ -z "${android_platform}" ]] && echo "FATAL: Supported Android platform not found" && exit 1
 [[ ! "${android_version_number}" =~ ^[[:digit:]]{1,2}?.[[:digit:]]$ ]] && echo "FATAL: Could not determine Android version number" && exit 1
 
-devices=$(printf %s "${device_list,,}" | sed -e "s/[[:punct:]]\+/ /g")
+devices=$(printf %s "${device_list}" | sed -e "s/[[:punct:]]\+/ /g")
 export devices
 export android_platform=${android_platform,,}
 export android_version_number ANDROID_VERSION=${android_version_number}
-export build_path="${BUILD_HOME}"/android/"${android_platform}"
+export build_path="${BUILD_HOME}/android/${android_platform}"
 export AVB_TOOL="${android_top}/external/avb/avbtool.py"
 export MAKE_KEY="${android_top}/development/tools/make_key"
 

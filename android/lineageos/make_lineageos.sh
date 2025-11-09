@@ -24,42 +24,44 @@ do
   device_keys="${keys_dir}/${device}"
 
   # Link keys (containerized link will not be found on host)
-  if [[ "${keys_dir}" != "${android_top}/keys" ]]
+  if [[ "${sign_build}" == "1" ]]
   then
-    mkdir keys 2>/dev/null || true
-    if [[ ! -d "${device_keys}" ]]
+    if [[ "${keys_dir}" != "${android_top}/keys" ]]
     then
-      mkdir "${device_keys}" 2>/dev/null || true
+      mkdir keys 2>/dev/null || true
+      if [[ ! -d "${device_keys}" ]]
+      then
+        mkdir "${device_keys}" 2>/dev/null || true
+      fi
+      ln -s "${device_keys}" "${android_top}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys failed"
     fi
-    ln -s "${device_keys}" "${android_top}"/keys 2>/dev/null || echo "WARN: Linking ${device} signing keys failed"
+    # Generate signing keys
+    [[ -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
+    make_lineageos_keys
   fi
-
-  # Generate signing keys
-  [[ "${sign_lineageos}" == "1" && -z "${keys_dir}" ]] && echo "Keys Dir is required if signing build" && usage
-  [[ "${sign_lineageos}" == "1" ]] && make_lineageos_keys
-
-  # Set build type
-  [[ -n "${build_type}" ]] && export LINEAGE_BUILDTYPE="${build_type}"
-  [[ -n "${LINEAGE_BUILDTYPE}" ]] && sed -i '/Filter out random types/,+5d' vendor/lineage/config/version.mk
-
-  mkdir -p "${out_dir}"/"${device}"/"${build_date}" 2>/dev/null || true
 
   # Sync LOS repo
   git_clean_repo -c -d "${PWD}"
   repo init -u https://github.com/LineageOS/android.git -b lineage-"${android_version_number}" --git-lfs
-  [[ "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
+  [[ ! "$roomservice" == "1" ]] && rm -f .repo/local_manifests/roomservice.xml
   sync_repo
-  source build/envsetup.sh
 
   (( ${android_version_number%%.*} < 19 )) && echo "FATAL: Only LineageOS 19 or higher supported" && usage
 
   # Apply User Scripts
   [[ -n "${user_scripts}" ]] && apply_user_scripts
 
+  # Set build type
+  if [[ -n "${build_type}" ]]
+  then
+    export LINEAGE_BUILDTYPE="${build_type}"
+    sed -i '/Filter out random types/,+5d' "${android_top}/vendor/lineage/config/version.mk"
+  fi
+
   # Verify official build release url updated
   if [[ "${OFFICIAL_BUILD}" == "true" ]]
   then
-    if grep -q "download.lineageos.org/api" packages/apps/Updater/app/src/main/res/values/strings.xml 
+    if grep -q "download.lineageos.org/api" packages/apps/Updater/app/src/main/res/values/strings.xml
     then
       echo "FATAL: Official build detected. Update server URL must be changed from default"
       usage
@@ -77,7 +79,9 @@ do
   print_env
 
   # Build OS
-  if [[ "${sign_lineageos}" == "1" ]]
+  source build/envsetup.sh
+
+  if [[ "${sign_build}" == "1" ]]
   then
     echo "INFO: Breakfast combo: ${combo}"
     breakfast "${combo}"
@@ -86,7 +90,7 @@ do
     # Sign build
     # shellcheck disable=SC2046
     sign_target_files_apks -o -d "${device_keys}" $(extra_apks_args) \
-    "${OUT}"/obj/PACKAGING/target_files_intermediates/*-target_files-*.zip signed-target_files.zip
+    "${OUT}"/obj/PACKAGING/target_files_intermediates/*-target_files*.zip signed-target_files.zip
 
     # Package Files
     ota_from_target_files -k "${device_keys}"/releasekey --block --backup=true signed-target_files.zip signed-ota_update.zip
@@ -102,25 +106,26 @@ do
   mkdir -p "${device_out}" 2>/dev/null
 
   # Move signed build to out dir
-  if [[ "${sign_lineageos}" == "1" ]]
+  if [[ "${sign_build}" == "1" ]]
   then
     mv signed-ota_update.zip "${device_out}"/lineage-"${android_version_number}"-"${build_date}"-"${LINEAGE_BUILDTYPE,,}"-"${device}"-signed.zip
-    find "${device_out}" -maxdepth 1 -name "*.img" -empty -delete
   else
     mv out/target/product/"${device}"/lineage-*.zip "${device_out}"
   fi
 
   # Copy install images to device out
-  for img in boot vendor_boot vendor_kernel_boot dtbo
+  for img in boot dtbo init_boot pvmfw recovery vendor_boot vendor_kernel_boot vbmeta
   do
-    if [[ "${sign_lineageos}" == "1" ]]
+    if [[ "${sign_build}" == "1" ]]
     then
       unzip -p signed-target_files.zip IMAGES/${img}.img > "${device_out}"/${img}.img || true
     else
       find "${OUT}"/obj/PACKAGING/target_files_intermediates -name "${img}.img" \
-      -exec mv {} "${device_out}"/${img}.img \; || true
+      -exec mv {} "${device_out}/${img}.img" \; || true
     fi
   done
+
+  find "${device_out}" -maxdepth 1 -name "*.img" -empty -delete
 
   # Remove device-specific settings
   [[ -L "keys/${device}" ]] && rm -f "keys/${device}"

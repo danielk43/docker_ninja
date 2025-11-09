@@ -18,7 +18,6 @@ ENV ANDROID_VERSION=""
 ENV BUILD_TYPE=""
 ENV BUILD_VARIANT=userdebug
 ENV CLEAN_REPO=""
-ENV DELETE_ROOMSERVICE=""
 ENV DEVICES=""
 ENV DNAME_ANDROID=""
 ENV DNAME_CHROMIUM=""
@@ -29,6 +28,7 @@ ENV PERSIST_VENDOR=""
 ENV PRINT_ENV=""
 ENV PRUNE_SINCE=""
 ENV RELEASE_TAG=""
+ENV ROOMSERVICE=""
 ENV SIGN_BUILD=""
 ENV SYNC_JOBS=""
 ENV SYNC_RETRIES=""
@@ -54,11 +54,11 @@ RUN apt update \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local bin/protoc \
  && unzip -o protoc-*-linux-x86_64.zip -d /usr/local include/* \
  && apt update \
- && apt install -y bc binutils bison build-essential ccache cgpt e2fsprogs expect file flex git-lfs \
-    gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
-    libkrb5-dev liblz4-dev libnss3-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lz4 lzop m4 \
-    nodejs temurin-"$JDK_VERSION"-jdk openssh-server pngcrush python-is-python3 python3-pip rsync \
-    schedtool squashfs-tools wget xsltproc xxd zlib1g-dev \
+ && apt install -y bc binutils bison build-essential ccache cgpt e2fsprogs erofs-utils expect file flex \
+    git-lfs gperf imagemagick jq lib32readline-dev lib32z1-dev libdbus-1-dev libdrm-dev libelf-dev libgcc-s1 \
+    libkrb5-dev liblz4-dev libnss3-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lz4 lzop m4 nodejs \
+    patchelf temurin-"$JDK_VERSION"-jdk openssh-server pngcrush python-is-python3 python3-pip rsync schedtool \
+    squashfs-tools wget xsltproc xxd zlib1g-dev \
  && pip3 install --break-system-packages --no-cache-dir lxml protobuf pyyaml \
  && apt -y autoremove \
  && apt -y clean \
