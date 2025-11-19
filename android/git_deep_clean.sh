@@ -43,7 +43,11 @@ run_cmd_with_submodules() {
   local cmd="$1"
 
   run_cmd "${cmd}"
-  run_cmd "git submodule foreach '${cmd}'"
+  if [[ -z ${REPO_PREFIX} ]]
+  then
+    echo "Running cmd: git submodule foreach ${cmd}"
+    git submodule foreach "${cmd}" &>/dev/null || true
+  fi
 }
 
 OPTIND=1

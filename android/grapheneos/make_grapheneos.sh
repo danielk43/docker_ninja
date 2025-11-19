@@ -37,9 +37,10 @@ then
   [[ ! -d src ]] && fetch --nohooks android
   pushd src >/dev/null
   repo_safe_dir
-  git_clean_repo -cx -d "${PWD}"
   git fetch --all --force --tags --prune --prune-tags
   git checkout --force "${vanadium_current_version}"
+  rm -f .git/index
+  git_clean_repo -cx -d "${PWD}"
   git am --whitespace=nowarn --keep-non-patch "${chromium_dir}"/patches/*.patch
   popd >/dev/null
   gclient sync -D --with_branch_heads --with_tags --jobs "${sync_jobs}"
@@ -49,8 +50,8 @@ then
   gn gen out/Default
   gn args out/Default --list > out/Default/gn_list
 
-  chrt -b 0 autoninja -C out/Default trichrome_webview_64_32_apk \
-  trichrome_chrome_64_32_apk trichrome_library_64_32_apk vanadium_config_apk
+  chrt -b 0 autoninja -C out/Default trichrome_webview_64_apk \
+  trichrome_chrome_64_apk trichrome_library_64_apk vanadium_config_apk
 
   echo "${VANADIUM_PASSWORD}" | "${chromium_dir}"/generate-release out
   popd >/dev/null
@@ -59,7 +60,7 @@ fi
 
 # Determine Build Ref
 export latest_tag_cmd="https://grapheneos.org/releases | xmllint --html --xpath \
-                      '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2> /dev/null"
+                      '/html/body/main/nav/ul/li[4]/ul/li[1]/a/text()' - 2>/dev/null"
 repo_safe_dir
 repo_init_ref
 
@@ -91,6 +92,7 @@ do
 
   if [[ ! "${release_tag}" =~ ^dev|^$ ]]
   then
+    export BUILD_NUMBER=${release_tag}
     repo init -u https://github.com/GrapheneOS/platform_manifest.git -b refs/tags/"${release_tag}"
     mkdir ~/.ssh 2>/dev/null || true
     curl -sL https://grapheneos.org/allowed_signers -o ~/.ssh/grapheneos_allowed_signers
@@ -99,12 +101,11 @@ do
     git verify-tag "$(git describe)" || (echo "FATAL: GrapheneOS tag verification failed" && exit 1)
     popd >/dev/null
   else
-    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 16
+    repo init -u https://github.com/GrapheneOS/platform_manifest.git -b 16-qpr2
   fi
   sync_repo
   source build/envsetup.sh >/dev/null
 
-  [[ -n "${release_latest_tag}" ]] && export BUILD_NUMBER=${release_tag}
   echo "BUILD_DATETIME=${BUILD_DATETIME} BUILD_NUMBER=${BUILD_NUMBER}"
 
   if [[ -d "${chromium_dir}/src/out/Default/apks/release" ]]
@@ -119,9 +120,13 @@ do
   # Build kernel
   [[ -z "${kernel_dir}" ]] && echo "FATAL: GrapheneOS Kernel directory missing" && usage
   pushd "${kernel_dir}" >/dev/null
+  kernel_ref=16-qpr2
+  # 10th gen
+  if grep -q "${device}" <<< "mustang blazer frankel"
+  then
+    codename=muzel
   # 6th through 9th gen
-  kernel_ref=16-qpr1
-  if grep -q "${device}" <<< "komodo caiman tokay"
+  elif grep -q "${device}" <<< "komodo caiman tokay"
   then
     codename=caimoto
   elif grep -q "${device}" <<< "husky shiba"
@@ -136,8 +141,14 @@ do
   else
     codename=${device}
   fi
-  git clone https://gitlab.com/grapheneos/kernel_pixel.git -b "${kernel_ref}" --recurse-submodules 2>/dev/null || true
-  pushd kernel_pixel >/dev/null
+  if grep -q "${codename}" <<< "mustang blazer frankel rango"
+  then
+    kernel_repo=kernel_pixel_muzel
+  else
+    kernel_repo=kernel_pixel
+  fi
+  git clone https://gitlab.com/grapheneos/"${kernel_repo}".git -b "${kernel_ref}" --recurse-submodules 2>/dev/null || true
+  pushd "${kernel_repo}" >/dev/null
   # repo_safe_dir # Fix ownership to prevent git errors in Bazel sandbox
   chown -R "$(id -u):$(id -g)" "${PWD}"
   git_clean_repo -c -d "${PWD}"
@@ -149,8 +160,14 @@ do
     git checkout --force "${kernel_ref}"
   fi
   git submodule update --init --recursive
-  KLEAF_REPO_MANIFEST=aosp_manifest.xml ./build_"${codename}".sh --lto=full
-  cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
+  if [[ "${kernel_repo}" == "kernel_pixel_muzel" ]]
+  then
+    ./build_"${codename}".sh --lto=full --repo_manifest="$(realpath .)":"$(realpath aosp_manifest.xml)"
+    cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/laguna-kernels/**/*
+  else
+    KLEAF_REPO_MANIFEST=aosp_manifest.xml ./build_"${codename}".sh --lto=full
+    cp -rf out/"${codename}"/dist/* "${android_top}"/device/google/"${codename}"-kernels/**/*
+  fi
   popd >/dev/null
   popd >/dev/null
 
@@ -158,12 +175,11 @@ do
   if [[ "${persist_vendor}" == "0" ]]
   then
     echo "INFO: Extracting vendor files"
-    rm -rf vendor/adevtool/node_modules
-    yarnpkg install --cwd vendor/adevtool
-    lunch sdk_phone64_x86_64-cur-user
-    m arsclib
-    rm -rf vendor/google_devices/*
-    vendor/adevtool/bin/run generate-all -d "${device}"
+    rm -rf vendor/adevtool/node_modules vendor/google_devices/*
+    # Allow adevtool to work in container
+    . "${build_path}"/patch_adevtool.sh
+    yarnpkg --cwd vendor/adevtool install
+    vendor/adevtool/bin/run generate-all -d "${device}" --updateSpec
   fi
   [[ ! -d vendor/google_devices/${device} ]] && echo "FATAL: vendor/google_devices/${device} missing" && usage
 

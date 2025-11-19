@@ -2,7 +2,7 @@
 
 # shellcheck disable=SC2154
 
-export GRAPHENEOS_SIGNING_KEYS=(bluetooth gmscompat_lib media networkstack platform releasekey sdk_sandbox shared)
+export GRAPHENEOS_SIGNING_KEYS=(bluetooth gmscompat_lib media networkstack nfc platform releasekey sdk_sandbox shared)
 
 make_grapheneos_keys() {
   mkdir "${device_keys}" 2>/dev/null || true
