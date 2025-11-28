@@ -43,7 +43,7 @@ runs:
     - name: Extract Docker metadata
       id: meta
       if: inputs.operation == 'metadata'
-      uses: docker/metadata-action@318604b99e75e41977312d83839a89be02ca4893
+      uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051
       with:
         images: docker.io/${{ inputs.repository_owner }}/ninja_${{ inputs.image_tag }}
         tags: |
