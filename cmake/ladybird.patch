@@ -1,0 +1,24 @@
+diff --git a/Meta/ladybird.py b/Meta/ladybird.py
+--- a/Meta/ladybird.py
++++ b/Meta/ladybird.py
+@@ -125,10 +125,7 @@ def main():
+         parser.print_help()
+         sys.exit(1)
+
+-    if platform.host_system != HostSystem.Windows and os.geteuid() == 0:
+-        print("Do not run ladybird.py as root, your Build directory will become root-owned", file=sys.stderr)
+-        sys.exit(1)
+-    elif platform.host_system == HostSystem.Windows and "VCINSTALLDIR" not in os.environ:
++    if platform.host_system == HostSystem.Windows and "VCINSTALLDIR" not in os.environ:
+         print("ladybird.py must be run from a Visual Studio enabled environment", file=sys.stderr)
+         sys.exit(1)
+
+@@ -207,6 +204,7 @@ def configure_main(platform: Platform, preset: str, cc: str, cxx: str) -> Path:
+         build_preset_dir,
+         f"-DCMAKE_C_COMPILER={cc}",
+         f"-DCMAKE_CXX_COMPILER={cxx}",
++        f"-DLADYBIRD_GUI_FRAMEWORK=Qt",
+     ]
+
+     if platform.host_system == HostSystem.Linux and platform.host_architecture == HostArchitecture.AArch64:
+

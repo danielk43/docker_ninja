@@ -1,6 +1,5 @@
 FROM debian:trixie-slim
 
-ARG DEBIAN_FRONTEND=noninteractive
 ARG LLVM_VERSION=21
 
 ENV LLVM_VERSION=$LLVM_VERSION
@@ -16,12 +15,15 @@ RUN mkdir -p bin \
  llvm-toolchain-trixie-$LLVM_VERSION main" | tee -a /etc/apt/sources.list.d/llvm.list \
  && echo 'alias ll="ls -alF"' >> /root/.bashrc \
  && apt update \
- && apt install -y autoconf autoconf-archive automake build-essential ccache \
-    clang-"$LLVM_VERSION" clangd-"$LLVM_VERSION" clang-format-"$LLVM_VERSION" \
-    clang-tidy-"$LLVM_VERSION" clang-tools-"$LLVM_VERSION" fonts-liberation2 \
-    git-core libdrm-dev libgl1-mesa-dev libpulse-dev libqt6opengl6-dev libqt6svg6-dev \
-    libssl-dev libtool libxkbcommon-dev lld-"$LLVM_VERSION" nasm pkg-config python3-venv \
-    qt6-base-dev qt6-declarative-dev qt6-multimedia-dev qt6-tools-dev-tools qt6-wayland \
+ && DEBIAN_FRONTEND=noninteractive apt install -y autoconf autoconf-archive automake \
+    build-essential ccache clang-"$LLVM_VERSION" clangd-"$LLVM_VERSION" \
+    clang-format-"$LLVM_VERSION" clang-tidy-"$LLVM_VERSION" clang-tools-"$LLVM_VERSION" \
+    fonts-liberation2 git-core libdrm-dev libgl1-mesa-dev libpulse-dev libqt6opengl6-dev \
+    libqt6svg6-dev libssl-dev libtool libxkbcommon-dev lld-"$LLVM_VERSION" nasm pkg-config \
+    python3-venv qt6-base-dev qt6-declarative-dev qt6-multimedia-dev qt6-tools-dev-tools \
+    qt6-wayland rustup \
+ && rustup toolchain install stable --no-self-update \
+ && rustup default stable \
  && curl -LO $(curl -s https://api.github.com/repos/ninja-build/ninja/releases/latest \
   | grep "browser_download_url.*linux.zip" | cut -d\" -f4) \
  && unzip ninja-linux.zip -d /usr/local/bin \
