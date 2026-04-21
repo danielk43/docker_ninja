@@ -39,6 +39,7 @@ sync_repo() {
     [[ "${n}" -le "${r}" ]] && echo "WARN: repo sync failed, retry ${n} of ${r}"
     [[ "${n}" -gt "${r}" ]] && echo "FATAL: repo sync exceeded max retries" && exit 1
   done
+  repo forall -c 'git lfs pull' -j"${sync_jobs}" 2>/dev/null
   set -e
 }
 
@@ -60,6 +61,11 @@ repo_safe_dir() {
     do
       git config --global --add safe.directory "${PWD}"/"${project}"
     done < .repo/project.list >/dev/null || true
+    # shellcheck disable=SC2046
+    for repository in $(dirname $(find . -mindepth 2 -name .git -printf "%P\n"))
+    do
+      git config --global --add safe.directory "${PWD}/${repository}"
+    done
   fi
 }
 

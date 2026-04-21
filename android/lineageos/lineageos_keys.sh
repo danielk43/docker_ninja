@@ -5,7 +5,7 @@
 export LINEAGEOS_SIGNING_KEYS=(bluetooth cyngn-app media networkstack nfc platform \
                              releasekey sdk_sandbox shared testcert testkey verity)
 export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.adservices.api com.android.appsearch \
-                          com.android.appsearch.apk com.android.art com.android.bluetooth com.android.bt \
+                          com.android.art com.android.bluetooth com.android.bt \
                           com.android.btservices com.android.cellbroadcast com.android.compos com.android.configinfrastructure \
                           com.android.connectivity.resources com.android.conscrypt com.android.crashrecovery \
                           com.android.devicelock com.android.extservices com.android.graphics.pdf com.android.hardware.authsecret \
@@ -21,9 +21,9 @@ export LINEAGEOS_APEX_KEYS=(com.android.adbd com.android.adservices com.android.
                           com.android.ondevicepersonalization com.android.os.statsd com.android.permission \
                           com.android.profiling com.android.resolv com.android.rkpd com.android.runtime \
                           com.android.safetycenter.resources com.android.scheduling com.android.sdkext \
-                          com.android.support.apexer com.android.telephony com.android.telephonymodules \
-                          com.android.tethering com.android.tzdata com.android.uprobestats com.android.uwb \
-                          com.android.uwb.resources com.android.virt com.android.vndk.current \
+                          com.android.support.apexer com.android.telephony com.android.telephonycore \
+                          com.android.telephonymodules com.android.tethering com.android.tzdata com.android.uprobestats \
+                          com.android.uwb com.android.uwb.resources com.android.virt com.android.vndk.current \
                           com.android.vndk.current.on_vendor com.android.wifi com.android.wifi.dialog \
                           com.android.wifi.resources com.google.pixel.camera.hal com.google.pixel.vibrator.hal \
                           com.qorvo.uwb)
@@ -78,6 +78,7 @@ extra_apks_args() {
   done
   cat << EOF
     --extra_apks AdServicesApk.apk=${device_keys}/releasekey \
+    --extra_apks com.android.appsearch.apk.apk=${device_keys}/releasekey \
     --extra_apks FederatedCompute.apk=${device_keys}/releasekey \
     --extra_apks HalfSheetUX.apk=${device_keys}/releasekey \
     --extra_apks HealthConnectBackupRestore.apk=${device_keys}/releasekey \

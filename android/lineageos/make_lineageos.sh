@@ -114,7 +114,7 @@ do
   fi
 
   # Copy install images to device out
-  for img in boot dtbo init_boot pvmfw recovery vendor_boot vendor_kernel_boot vbmeta
+  for img in boot dtbo init_boot pvmfw recovery vbmeta vbmeta_system vbmeta_vendor vendor_boot vendor_kernel_boot
   do
     if [[ "${sign_build}" == "1" ]]
     then
